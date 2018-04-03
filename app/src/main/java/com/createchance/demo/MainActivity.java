@@ -1,0 +1,150 @@
+package com.createchance.demo;
+
+import android.os.Bundle;
+import android.os.Environment;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+
+import java.io.File;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void start(View view) {
+        Log.d(TAG, "start click!!!!!!!!!!!!");
+//        VideoCutAction cutAction = new VideoCutAction.Builder()
+//                .cut(new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"))
+//                .from(5 * 1000)
+//                .duration(20 * 1000)
+//                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/clip.mp4"))
+//                .build();
+//        cutAction.start(new ActionCallback() {
+//            @Override
+//            public void onStarted(int event) {
+//
+//            }
+//
+//            @Override
+//            public void onProgress(int event, float progress) {
+//
+//            }
+//
+//            @Override
+//            public void onSuccess(int event) {
+//
+//            }
+//
+//            @Override
+//            public void onFailed(int event) {
+//
+//            }
+//        });
+
+//        VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
+//                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"))
+//                .withBgm(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
+//                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/withbgm.mp4"))
+//                .build();
+//        bgmAddAction.start(new ActionCallback() {
+//            @Override
+//            public void onStarted(int event) {
+//
+//            }
+//
+//            @Override
+//            public void onProgress(int event, float progress) {
+//
+//            }
+//
+//            @Override
+//            public void onSuccess(int event) {
+//
+//            }
+//
+//            @Override
+//            public void onFailed(int event) {
+//
+//            }
+//        });
+
+        Test.addBackgroundMusic(
+                new File(Environment.getExternalStorageDirectory(), "videoeditor/music.aac"),
+                new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"),
+                new File(Environment.getExternalStorageDirectory(), "videoeditor/withbgm.mp4")
+        );
+
+
+//        VideoBgmRemoveAction removeAction = new VideoBgmRemoveAction.Builder()
+//                .removeBgm(new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"))
+//                .from(5 * 1000)
+//                .duration(10 * 1000)
+//                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/removebgm.mp4"))
+//                .build();
+//        removeAction.start(new ActionCallback() {
+//            @Override
+//            public void onStarted(int event) {
+//
+//            }
+//
+//            @Override
+//            public void onProgress(int event, float progress) {
+//
+//            }
+//
+//            @Override
+//            public void onSuccess(int event) {
+//
+//            }
+//
+//            @Override
+//            public void onFailed(int event) {
+//
+//            }
+//        });
+
+//        VideoMergeAction mergeAction = new VideoMergeAction.Builder()
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input1.mp4"))
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
+//                .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
+//                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/concat.mp4"))
+//                .build();
+//        mergeAction.start(new ActionCallback() {
+//            @Override
+//            public void onStarted(int event) {
+//                Log.d(TAG, "onStarted: ");
+//                mStartTime = System.currentTimeMillis();
+//            }
+//
+//            @Override
+//            public void onProgress(int event, float progress) {
+//                Log.d(TAG, "onProgress: ");
+//            }
+//
+//            @Override
+//            public void onSuccess(int event) {
+//                Log.d(TAG, "onSuccess: ");
+//                mEndTime = System.currentTimeMillis();
+//                Log.d(TAG, "Time consumed : " + (mEndTime - mStartTime) + "ms.");
+//            }
+//
+//            @Override
+//            public void onFailed(int event) {
+//                Log.d(TAG, "onFailed: ");
+//            }
+//        });
+    }
+}
