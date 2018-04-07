@@ -1,5 +1,8 @@
 package com.createchance.demo;
 
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
@@ -8,6 +11,8 @@ import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -469,8 +474,172 @@ public class Test {
         }
     }
 
-    public static void convertMp3ToAac(File mp3File) {
+    public static void getPcmData(File audioFile, File output) {
+        try {
+            final String encodeFile = audioFile.getAbsolutePath();
+            MediaExtractor extractor = new MediaExtractor();
+            extractor.setDataSource(encodeFile);
+            MediaFormat mediaFormat = null;
+            for (int i = 0; i < extractor.getTrackCount(); i++) {
+                MediaFormat format = extractor.getTrackFormat(i);
+                String mime = format.getString(MediaFormat.KEY_MIME);
+                if (mime.startsWith("audio/")) {
+                    extractor.selectTrack(i);
+                    mediaFormat = format;
+                    break;
+                }
+            }
+            if (mediaFormat == null) {
+                Log.e(TAG, "not a valid file with audio track..");
+                extractor.release();
+                return;
+            }
+            FileOutputStream fosDecoder = new FileOutputStream(output);//your out file path
+            String mediaMime = mediaFormat.getString(MediaFormat.KEY_MIME);
+            MediaCodec codec = MediaCodec.createDecoderByType(mediaMime);
+            codec.configure(mediaFormat, null, null, 0);
+            codec.start();
+            ByteBuffer[] codecInputBuffers = codec.getInputBuffers();
+            ByteBuffer[] codecOutputBuffers = codec.getOutputBuffers();
+            final long kTimeOutUs = 5000;
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+            boolean sawInputEOS = false;
+            boolean sawOutputEOS = false;
+            int totalRawSize = 0;
+            try {
+                while (!sawOutputEOS) {
+                    if (!sawInputEOS) {
+                        int inputBufIndex = codec.dequeueInputBuffer(kTimeOutUs);
+                        if (inputBufIndex >= 0) {
+                            ByteBuffer dstBuf = codecInputBuffers[inputBufIndex];
+                            int sampleSize = extractor.readSampleData(dstBuf, 0);
+                            if (sampleSize < 0) {
+                                Log.i(TAG, "saw input EOS.");
+                                sawInputEOS = true;
+                                codec.queueInputBuffer(inputBufIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                            } else {
+                                long presentationTimeUs = extractor.getSampleTime();
+                                codec.queueInputBuffer(inputBufIndex, 0, sampleSize, presentationTimeUs, 0);
+                                extractor.advance();
+                            }
+                        }
+                    }
+                    int res = codec.dequeueOutputBuffer(info, kTimeOutUs);
+                    if (res >= 0) {
+                        int outputBufIndex = res;
+                        // Simply ignore codec config buffers.
+                        if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
+                            Log.i(TAG, "audio encoder: codec config buffer");
+                            codec.releaseOutputBuffer(outputBufIndex, false);
+                            continue;
+                        }
 
+                        if (info.size != 0) {
+
+                            ByteBuffer outBuf = codecOutputBuffers[outputBufIndex];
+
+                            outBuf.position(info.offset);
+                            outBuf.limit(info.offset + info.size);
+                            byte[] data = new byte[info.size];
+                            outBuf.get(data);
+                            totalRawSize += data.length;
+                            fosDecoder.write(data);
+
+                        }
+
+                        codec.releaseOutputBuffer(outputBufIndex, false);
+
+                        if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                            Log.i(TAG, "saw output EOS.");
+                            sawOutputEOS = true;
+                        }
+
+                    } else if (res == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
+                        codecOutputBuffers = codec.getOutputBuffers();
+                        Log.i(TAG, "output buffers have changed.");
+                    } else if (res == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                        MediaFormat oformat = codec.getOutputFormat();
+                        Log.i(TAG, "output format has changed to " + oformat);
+                    }
+                }
+            } finally {
+                fosDecoder.close();
+                codec.stop();
+                codec.release();
+                extractor.release();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void playPcm(File audioFile) {
+        int sampleRateInHz = 44100;
+        int channelConfig = AudioFormat.CHANNEL_OUT_STEREO;
+        int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+        int bufferSizeInBytes = AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+        AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRateInHz, channelConfig, audioFormat, bufferSizeInBytes, AudioTrack.MODE_STREAM);
+        audioTrack.play();
+
+        FileInputStream audioInput = null;
+        try {
+            audioInput = new FileInputStream(audioFile);//put your wav file in
+            audioInput.read(new byte[44]);//skid 44 wav header
+
+            byte[] audioData = new byte[512];
+
+            while (audioInput.read(audioData) != -1) {
+                audioTrack.write(audioData, 0, audioData.length); //play raw audio bytes
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            audioTrack.stop();
+            audioTrack.release();
+            if (audioInput != null)
+                try {
+                    audioInput.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+        }
+    }
+
+    public static void mixPcm(File firstAudio, File secongAudio, File output) {
+        try {
+            byte[] firstBuff = new byte[2];
+            byte[] secondBuff = new byte[2];
+            byte[] outBuff = new byte[2];
+            short firstVal, secondVal, outputVal;
+            FileOutputStream fileOutputStream = new FileOutputStream(output);
+            FileInputStream firstAudioStream = new FileInputStream(firstAudio);
+            FileInputStream secondAudioStream = new FileInputStream(secongAudio);
+
+            while (true) {
+                int firstRet = firstAudioStream.read(firstBuff, 0, 2);
+                int secondRet = secondAudioStream.read(secondBuff, 0, 2);
+                if (firstRet != -1 && secondRet != -1) {
+                    firstVal = (short) (firstBuff[0] & 0xff | (firstBuff[1] & 0xff) << 8);
+                    secondVal = (short) (secondBuff[0] & 0xff | (secondBuff[1] & 0xff) << 8);
+                    Log.d(TAG, "mixPcm, first: " + firstVal + ", second: " + secondVal);
+                    outputVal = (short) ((firstVal + secondVal) / 2);
+                    outBuff[0] = (byte) (outputVal & 0x00ff);
+                    outBuff[1] = (byte) ((outputVal & 0x00ff) >> 8);
+                    Log.d(TAG, "mixPcm, writing data......");
+                    fileOutputStream.write(outBuff, 0, 2);
+                } else {
+                    Log.d(TAG, "mixPcm, read one end, first: " + firstRet + ", second: " + secondRet);
+                    break;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

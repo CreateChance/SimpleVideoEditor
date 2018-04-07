@@ -6,6 +6,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
+import com.createchance.simplevideoeditor.ActionCallback;
+import com.createchance.simplevideoeditor.video.VideoBgmAddAction;
+
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
@@ -47,38 +50,51 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 
-//        VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
-//                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"))
-//                .withBgm(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
-//                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/withbgm.mp4"))
-//                .build();
-//        bgmAddAction.start(new ActionCallback() {
-//            @Override
-//            public void onStarted(int event) {
-//
-//            }
-//
-//            @Override
-//            public void onProgress(int event, float progress) {
-//
-//            }
-//
-//            @Override
-//            public void onSuccess(int event) {
-//
-//            }
-//
-//            @Override
-//            public void onFailed(int event) {
-//
-//            }
-//        });
+//        Test.getPcmData(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"),
+//                new File(Environment.getExternalStorageDirectory(), "videoeditor/output1.pcm"));
+//        Test.playPcm(new File(Environment.getExternalStorageDirectory(), "videoeditor/mixed.pcm"));
+//        Test.mixPcm(
+//                new File(Environment.getExternalStorageDirectory(), "videoeditor/output.pcm"),
+//                new File(Environment.getExternalStorageDirectory(), "videoeditor/output1.pcm"),
+//                new File(Environment.getExternalStorageDirectory(), "videoeditor/mixed.pcm")
+//        );
 
-        Test.addBackgroundMusic(
-                new File(Environment.getExternalStorageDirectory(), "videoeditor/music.aac"),
-                new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"),
-                new File(Environment.getExternalStorageDirectory(), "videoeditor/withbgm.mp4")
-        );
+        VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
+                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"))
+                .withBgm(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.aac"))
+                .videoFrom(5 * 1000)
+                .videoDuration(20 * 1000)
+                .bgmFrom(30 * 1000)
+                .override(true)
+                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/withbgm.mp4"))
+                .build();
+        bgmAddAction.start(new ActionCallback() {
+            @Override
+            public void onStarted(int event) {
+
+            }
+
+            @Override
+            public void onProgress(int event, float progress) {
+
+            }
+
+            @Override
+            public void onSuccess(int event) {
+
+            }
+
+            @Override
+            public void onFailed(int event) {
+
+            }
+        });
+
+//        Test.addBackgroundMusic(
+//                new File(Environment.getExternalStorageDirectory(), "videoeditor/music.aac"),
+//                new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"),
+//                new File(Environment.getExternalStorageDirectory(), "videoeditor/withbgm.mp4")
+//        );
 
 
 //        VideoBgmRemoveAction removeAction = new VideoBgmRemoveAction.Builder()
