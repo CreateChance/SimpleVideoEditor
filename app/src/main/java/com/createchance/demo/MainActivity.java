@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
         AudioTransCodeAction transCodeAction = new AudioTransCodeAction.Builder()
                 .transCode(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
                 .to(new File(Environment.getExternalStorageDirectory(), "videoeditor/transcode.aac"))
+                .from(10 * 1000)
+                .duration(10 * 1000)
                 .targetFormat(AudioTransCodeAction.FORMAT.AAC)
                 .build();
         transCodeAction.start(new ActionCallback() {

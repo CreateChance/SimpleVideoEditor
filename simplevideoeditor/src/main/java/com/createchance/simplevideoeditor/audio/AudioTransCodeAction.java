@@ -226,7 +226,7 @@ public class AudioTransCodeAction extends AbstractAction {
                         ByteBuffer buffer = inputBuffers[inIndex];
                         int sampleSize = extractor.readSampleData(buffer, 0);
                         timestamp = extractor.getSampleTime();
-                        if (timestamp > mDurationMs * 1000) {
+                        if (timestamp > (mStartPosMs + mDurationMs) * 1000) {
                             sampleSize = -1;
                         }
                         if (sampleSize <= 0) {
@@ -382,7 +382,8 @@ public class AudioTransCodeAction extends AbstractAction {
                         encoder.releaseOutputBuffer(outIndex, false);
                         mOutput.write(outData);
                         if (mCallback != null) {
-                            mCallback.onProgress(info.presentationTimeUs / (mDurationMs * 1000.0f));
+                            float progress = info.presentationTimeUs / ((mStartPosMs + mDurationMs) * 1000.0f);
+                            mCallback.onProgress(progress > 1.0f ? 1.0f : progress);
                         }
                     } else {
                         break;
