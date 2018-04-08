@@ -24,12 +24,6 @@ import java.util.List;
  */
 
 public class VideoMergeAction extends AbstractAction {
-
-    public static final int EVENT_MERGE_STARTED = 100;
-    public static final int EVENT_MERGE_GOING = 101;
-    public static final int EVENT_MERGE_DONE = 102;
-    public static final int EVENT_MERGE_FAILED = 103;
-
     private static final String TAG = "VideoMergeAction";
 
     private List<File> mInputFiles = new ArrayList<>();
@@ -89,7 +83,7 @@ public class VideoMergeAction extends AbstractAction {
         public void run() {
             try {
                 if (mCallback != null) {
-                    mCallback.onStarted(EVENT_MERGE_STARTED);
+                    mCallback.onStarted();
                 }
                 prepare();
 
@@ -97,7 +91,7 @@ public class VideoMergeAction extends AbstractAction {
             } catch (IOException e) {
                 e.printStackTrace();
                 if (mCallback != null) {
-                    mCallback.onFailed(EVENT_MERGE_FAILED);
+                    mCallback.onFailed();
                 }
             } finally {
                 release();
@@ -218,7 +212,7 @@ public class VideoMergeAction extends AbstractAction {
                 videoExtractor.release();
 
                 if (mCallback != null) {
-                    mCallback.onProgress(EVENT_MERGE_GOING, 0);
+                    mCallback.onProgress(0);
                 }
                 Log.d(TAG, "++++++++++++++++++++++++++++++++++++++merge, finish one file: " + video);
             }
@@ -226,7 +220,7 @@ public class VideoMergeAction extends AbstractAction {
             Log.d(TAG, "###############################################merge done!");
 
             if (mCallback != null) {
-                mCallback.onSuccess(EVENT_MERGE_DONE);
+                mCallback.onSuccess();
             }
         }
 

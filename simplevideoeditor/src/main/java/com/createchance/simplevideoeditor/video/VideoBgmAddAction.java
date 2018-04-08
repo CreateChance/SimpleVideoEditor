@@ -16,6 +16,7 @@ import com.createchance.simplevideoeditor.ActionRunner;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.sql.SQLOutput;
 
 /**
  * ${DESC}
@@ -147,6 +148,8 @@ public class VideoBgmAddAction extends AbstractAction {
 
     private void addMpegBgm() {
         // not impl
+        MpegBgmAddWorker mpegBgmAddWorker = new MpegBgmAddWorker();
+        ActionRunner.addTaskToBackground(mpegBgmAddWorker);
     }
 
     private String getBgmMime() throws IOException {
@@ -236,8 +239,7 @@ public class VideoBgmAddAction extends AbstractAction {
         int mixedSize = -1;
         MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
         long outDuration;
-        long bgmFrameTime;
-        boolean reachBgmEnd = false;
+        boolean reachBgmEos;
 
         @Override
         public void run() {
@@ -282,7 +284,7 @@ public class VideoBgmAddAction extends AbstractAction {
                                 mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT));
                         format.setInteger(MediaFormat.KEY_BIT_RATE, 96000);
 //                        format.setInteger(MediaFormat.KEY_PCM_ENCODING, mediaFormat.getInteger(MediaFormat.KEY_PCM_ENCODING));
-                        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 20 * 1024);
+                        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 512 * 1024);
                         format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
                         audioEncoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
                         // start codec
@@ -333,62 +335,21 @@ public class VideoBgmAddAction extends AbstractAction {
                 }
             }
 
-            // get frame time from bgm.
-            bgmFrameTime = getSampleTime(bgmAudioExtractor, inBgmTrackId);
-
-            // handle audio then
+            // handle source audio then
             sourceExtractor.unselectTrack(inVideoTrackId);
             sourceExtractor.selectTrack(inAudioTrackId);
+
             bgmAudioExtractor.selectTrack(inBgmTrackId);
             bgmAudioExtractor.seekTo(mBgmStartPosMs * 1000, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
             bufferInfo.presentationTimeUs = 0;
-            int sourceSampleSize = -1, bgmSampleSize = -1;
             while (true) {
-                sourceSampleSize = sourceExtractor.readSampleData(byteBuffer, 0);
-                if (sourceSampleSize < 0) {
-                    Log.d(TAG, "addBgm, reach source audio eos.");
+                if (readSourceAudio()) {
+                    readBgmAudio();
+                    mediaMuxer.writeSampleData(outAudioTrackId, byteBuffer, bufferInfo);
+                } else {
+                    Log.d(TAG, "addBgm, read source and bgm audio done, so exit.");
                     break;
                 }
-                bufferInfo.size = sourceSampleSize;
-                bufferInfo.flags = sourceExtractor.getSampleFlags();
-                bufferInfo.offset = 0;
-                bufferInfo.presentationTimeUs = sourceExtractor.getSampleTime();
-                // next frame
-                sourceExtractor.advance();
-
-                if (bufferInfo.presentationTimeUs >= mVideoStartPosMs * 1000 &&
-                        bufferInfo.presentationTimeUs <= (mVideoStartPosMs + mVideoDurationMs) * 1000) {
-                    if (mOverride) {
-                        if (!reachBgmEnd) {
-                            // read bgm audio data.
-                            bgmSampleSize = bgmAudioExtractor.readSampleData(byteBuffer, 0);
-                            if (bgmSampleSize < 0) {
-                                Log.d(TAG, "addBgm, reach bgm eos");
-                                reachBgmEnd = true;
-                            } else {
-                                bufferInfo.size = bgmSampleSize;
-                                bufferInfo.flags = bgmAudioExtractor.getSampleFlags();
-                                bufferInfo.offset = 0;
-                                Log.d(TAG, "addBgm, writing audio presentation: " + bufferInfo.presentationTimeUs);
-
-                                // next frame
-                                bgmAudioExtractor.advance();
-                            }
-                        }
-                    } else {
-                        if (!reachBgmEnd) {
-                            // mix two audio, pcm.....
-                            if (Build.VERSION.SDK_INT >= 21) {
-                                mixAudioAfter21();
-                            } else {
-                                mixAudioBefore21();
-                            }
-                            bufferInfo.size = mixedSize;
-                        }
-                    }
-                }
-                Log.d(TAG, "addBgm, write audio data.");
-                mediaMuxer.writeSampleData(outAudioTrackId, byteBuffer, bufferInfo);
             }
 
             Log.d(TAG, "addBgm done!");
@@ -425,12 +386,50 @@ public class VideoBgmAddAction extends AbstractAction {
             return Math.abs(secondVideoPTS - firstVideoPTS);
         }
 
+        private boolean readBgmAudio() {
+            if (reachBgmEos) {
+                return false;
+            }
+
+            if (bufferInfo.presentationTimeUs >= mVideoStartPosMs * 1000 &&
+                    bufferInfo.presentationTimeUs <= (mVideoStartPosMs + mVideoDurationMs) * 1000) {
+                int sampleSize = bgmAudioExtractor.readSampleData(byteBuffer, 0);
+                if (sampleSize < 0) {
+                    Log.d(TAG, "addBgm, read bgm audio done.");
+                    reachBgmEos = true;
+                    return false;
+                }
+                bufferInfo.size = sampleSize;
+                bufferInfo.offset = 0;
+                bufferInfo.flags = bgmAudioExtractor.getSampleFlags();
+
+                bgmAudioExtractor.advance();
+            }
+
+            return true;
+        }
+
+        private boolean readSourceAudio() {
+            int sampleSize = sourceExtractor.readSampleData(byteBuffer, 0);
+            if (sampleSize < 0) {
+                Log.d(TAG, "readSourceAudio, read done.");
+                return false;
+            }
+            bufferInfo.size = sampleSize;
+            bufferInfo.offset = 0;
+            bufferInfo.flags = sourceExtractor.getSampleFlags();
+            bufferInfo.presentationTimeUs = sourceExtractor.getSampleTime();
+            sourceExtractor.advance();
+
+            return true;
+        }
+
         /**
          * mix video audio track and bgm audio track into source buffer.
          */
         @TargetApi(20)
         private void mixAudioBefore21() {
-            if (reachBgmEnd) {
+            if (reachBgmEos) {
                 return;
             }
         }
@@ -480,7 +479,7 @@ public class VideoBgmAddAction extends AbstractAction {
                             0,
                             MediaCodec.BUFFER_FLAG_END_OF_STREAM
                     );
-                    reachBgmEnd = true;
+                    reachBgmEos = true;
                 } else {
                     audioDecoder.queueInputBuffer(
                             bgmInputId,
@@ -529,4 +528,259 @@ public class VideoBgmAddAction extends AbstractAction {
             }
         }
     }
+
+    private class MpegBgmAddWorker implements Runnable {
+        MediaCodec encoder;
+        MediaCodec decoder;
+        MediaExtractor sourceExtractor;
+        MediaExtractor bgmExtractor;
+        MediaMuxer mediaMuxer;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(512 * 1024);
+        MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
+        int sourceInVideoTrackId = -1;
+        int sourceInAudioTrackId = -1;
+        int bgmInAudioTrackId = -1;
+        int outVideoTrackId = -1;
+        int outAudioTrackId = -1;
+        boolean reachBgmEos;
+
+        @Override
+        public void run() {
+            try {
+                prepare();
+
+                addBgm();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } finally {
+                release();
+            }
+        }
+
+        private void prepare() throws IOException {
+            sourceExtractor = new MediaExtractor();
+            sourceExtractor.setDataSource(mInputFile.getAbsolutePath());
+            bgmExtractor = new MediaExtractor();
+            bgmExtractor.setDataSource(mBgmFile.getAbsolutePath());
+            mediaMuxer = new MediaMuxer(mOutFile.getAbsolutePath(),
+                    MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+
+            // find source audio track
+            for (int i = 0; i < sourceExtractor.getTrackCount(); i++) {
+                MediaFormat mediaFormat = sourceExtractor.getTrackFormat(i);
+                String mime = mediaFormat.getString(MediaFormat.KEY_MIME);
+                if (mime.startsWith("video")) {
+                    sourceInVideoTrackId = i;
+                    outVideoTrackId = mediaMuxer.addTrack(mediaFormat);
+                } else if (mime.startsWith("audio")) {
+                    sourceInAudioTrackId = i;
+                    outAudioTrackId = mediaMuxer.addTrack(mediaFormat);
+                    encoder = MediaCodec.createEncoderByType(mime);
+                    Log.d(TAG, "configure encoder.");
+                    MediaFormat format = MediaFormat.createAudioFormat(mime,
+                            mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE),
+                            mediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT));
+                    format.setInteger(MediaFormat.KEY_BIT_RATE, 96000);
+//                        format.setInteger(MediaFormat.KEY_PCM_ENCODING, mediaFormat.getInteger(MediaFormat.KEY_PCM_ENCODING));
+                    format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 512 * 1024);
+                    format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
+                    encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+                    encoder.start();
+                }
+            }
+
+            // find bgm audio track
+            for (int i = 0; i < bgmExtractor.getTrackCount(); i++) {
+                MediaFormat mediaFormat = bgmExtractor.getTrackFormat(i);
+                String mime = mediaFormat.getString(MediaFormat.KEY_MIME);
+                if (mime.startsWith("audio")) {
+                    bgmInAudioTrackId = i;
+                    decoder = MediaCodec.createDecoderByType(mime);
+                    Log.d(TAG, "configure decoder.");
+                    decoder.configure(mediaFormat, null, null, 0);
+                    decoder.start();
+                    break;
+                }
+            }
+
+            mediaMuxer.start();
+
+            if (bgmInAudioTrackId == -1) {
+                Log.e(TAG, "No audio track in bgm file: " + mBgmFile);
+                throw new IllegalArgumentException("No audio track in bgm file: " + mBgmFile);
+            }
+        }
+
+        private void addBgm() {
+            // write video data first.
+            sourceExtractor.selectTrack(sourceInVideoTrackId);
+            while (true) {
+                int sampleSize = sourceExtractor.readSampleData(byteBuffer, 0);
+                if (sampleSize < 0) {
+                    Log.d(TAG, "addBgm, read source video done.");
+                    break;
+                }
+                bufferInfo.size = sampleSize;
+                bufferInfo.offset = 0;
+                bufferInfo.flags = sourceExtractor.getSampleFlags();
+                bufferInfo.presentationTimeUs = sourceExtractor.getSampleTime();
+                mediaMuxer.writeSampleData(outVideoTrackId, byteBuffer, bufferInfo);
+
+                // next frame
+                sourceExtractor.advance();
+            }
+
+            sourceExtractor.unselectTrack(sourceInVideoTrackId);
+            sourceExtractor.selectTrack(sourceInAudioTrackId);
+
+            bgmExtractor.selectTrack(bgmInAudioTrackId);
+            bgmExtractor.seekTo(mBgmStartPosMs * 1000, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
+            // trans code mp3 to pcm and to aac then.
+            while (true) {
+                if (readSourceAudio()) {
+                    readBgmAudio21();
+                    mediaMuxer.writeSampleData(outAudioTrackId, byteBuffer, bufferInfo);
+                } else {
+                    Log.d(TAG, "addBgm, read source and bgm audio done, so exit.");
+                    break;
+                }
+            }
+
+            Log.d(TAG, "addBgm done!!");
+        }
+
+        private void release() {
+            if (mediaMuxer != null) {
+                mediaMuxer.stop();
+                mediaMuxer.release();
+            }
+
+            if (sourceExtractor != null) {
+                sourceExtractor.release();
+            }
+
+            if (bgmExtractor != null) {
+                bgmExtractor.release();
+            }
+
+            if (decoder != null) {
+                decoder.stop();
+                decoder.release();
+            }
+
+            if (encoder != null) {
+                encoder.stop();
+                encoder.release();
+            }
+        }
+
+        @TargetApi(21)
+        private boolean readBgmAudio21() {
+            if (reachBgmEos) {
+                return false;
+            }
+
+            if (bufferInfo.presentationTimeUs >= mVideoStartPosMs * 1000 &&
+                    bufferInfo.presentationTimeUs <= (mVideoStartPosMs + mVideoDurationMs) * 1000) {
+                Log.d(TAG, "readBgmAudio...........");
+                int inputDecoderBufferId = decoder.dequeueInputBuffer(-1);
+                if (inputDecoderBufferId >= 0) {
+                    Log.d(TAG, "readBgmAudio21, get decoder input buffer.");
+                    ByteBuffer inputBuffer = decoder.getInputBuffer(inputDecoderBufferId);
+                    int sampleSize = bgmExtractor.readSampleData(inputBuffer, 0);
+                    if (sampleSize < 0) {
+                        Log.d(TAG, "addBgm, read bgm audio done.");
+                        reachBgmEos = true;
+                        decoder.queueInputBuffer(
+                                inputDecoderBufferId,
+                                0,
+                                0,
+                                bufferInfo.presentationTimeUs,
+                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                        );
+                        return false;
+                    }
+                    bufferInfo.size = sampleSize;
+                    bufferInfo.offset = 0;
+                    bufferInfo.flags = bgmExtractor.getSampleFlags();
+                    bgmExtractor.advance();
+
+                    decoder.queueInputBuffer(
+                            inputDecoderBufferId,
+                            0,
+                            sampleSize,
+                            bufferInfo.presentationTimeUs,
+                            0
+                    );
+
+                    // get pcm data from decoder output buffer.
+                    MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+                    int outputDecoderBufferId = decoder.dequeueOutputBuffer(info, -1);
+                    if (outputDecoderBufferId >= 0) {
+                        Log.d(TAG, "readBgmAudio21, get decoder output buffer.");
+                        if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) == 0) {
+                            ByteBuffer outputDecoderBuffer = decoder.getOutputBuffer(outputDecoderBufferId);
+                            int inputEncoderBufferId = encoder.dequeueInputBuffer(-1);
+                            if (inputEncoderBufferId >= 0) {
+                                Log.d(TAG, "readBgmAudio21, get encoder input buffer.");
+                                ByteBuffer inputEncodeBuffer = encoder.getInputBuffer(inputEncoderBufferId);
+                                inputEncodeBuffer.put(outputDecoderBuffer);
+                                encoder.queueInputBuffer(
+                                        inputEncoderBufferId,
+                                        0,
+                                        outputDecoderBuffer.capacity(),
+                                        bufferInfo.presentationTimeUs,
+                                        0);
+                                decoder.releaseOutputBuffer(outputDecoderBufferId, false);
+                            }
+                        } else {
+                            int inputEncoderBufferId = encoder.dequeueInputBuffer(-1);
+                            if (inputEncoderBufferId >= 0) {
+                                Log.d(TAG, "readBgmAudio21, get encoder input buffer.");
+                                ByteBuffer inputEncodeBuffer = encoder.getInputBuffer(inputEncoderBufferId);
+                                encoder.queueInputBuffer(
+                                        inputEncoderBufferId,
+                                        0,
+                                        0,
+                                        bufferInfo.presentationTimeUs,
+                                        MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                            }
+                        }
+
+                        // get aac data from encoder output buffer.
+                        int outputEncoderBufferId = encoder.dequeueOutputBuffer(info, -1);
+                        if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) == 0 &&
+                                outputEncoderBufferId >= 0) {
+                            Log.d(TAG, "readBgmAudio21, get encoder output buffer.");
+                            ByteBuffer outputEncoderBuffer = encoder.getOutputBuffer(outputEncoderBufferId);
+                            byteBuffer.put(outputEncoderBuffer);
+                            encoder.releaseOutputBuffer(outputEncoderBufferId, false);
+                        }
+                    }
+                }
+            } else {
+                Log.d(TAG, "readBgmAudio21, not in target time space!");
+            }
+
+            return true;
+        }
+
+        private boolean readSourceAudio() {
+            int sampleSize = sourceExtractor.readSampleData(byteBuffer, 0);
+            if (sampleSize < 0) {
+                Log.d(TAG, "readSourceAudio, read done.");
+                return false;
+            }
+            bufferInfo.size = sampleSize;
+            bufferInfo.offset = 0;
+            bufferInfo.flags = sourceExtractor.getSampleFlags();
+            bufferInfo.presentationTimeUs = sourceExtractor.getSampleTime();
+            sourceExtractor.advance();
+
+            return true;
+        }
+    }
+
 }

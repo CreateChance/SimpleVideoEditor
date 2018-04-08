@@ -16,7 +16,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -69,7 +69,7 @@ public class TransAacHandlerPure {
 
     private static class DecodeTask implements Runnable, IDataObtain {
         private static final long TIME_OUT = 5000;
-        private Queue<byte[]> mRawQueue;
+        private BlockingQueue<byte[]> mRawQueue;
         private MediaExtractor extractor;
         private boolean isFinish = false;
         private String srcFile;
@@ -90,7 +90,7 @@ public class TransAacHandlerPure {
             this.srcFile = srcFile;
             this.outFile = outFile;
             this.listener = listener;
-            mRawQueue = new LinkedBlockingQueue<>();
+            mRawQueue = new LinkedBlockingQueue<>(10);
         }
 
         private void pushAvFrame(byte[] frame) {
@@ -224,9 +224,9 @@ public class TransAacHandlerPure {
                         //开始编码线程
                         EncodeTask encodeTask = new EncodeTask(outFile, this, listener);
                         int sampleRate = mf.getInteger(MediaFormat.KEY_SAMPLE_RATE);
-                        int pcmEncoding = mf.getInteger(MediaFormat.KEY_PCM_ENCODING);
+//                        int pcmEncoding = mf.getInteger(MediaFormat.KEY_PCM_ENCODING);
                         int channelCount = mf.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
-                        encodeTask.setAudioParams(sampleRate, pcmEncoding, channelCount);
+                        encodeTask.setAudioParams(sampleRate, channelCount);
                         new Thread(encodeTask).start();
                         TransAacHandlerPure.logMsg("New format " + mf.toString());
                         break;
@@ -249,7 +249,12 @@ public class TransAacHandlerPure {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        pushAvFrame(outData);
+//                        pushAvFrame(outData);
+                        try {
+                            mRawQueue.put(outData);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         if (listener != null) {
                             listener.onProgress(rangeStart > 0 ? (int) (timestamp - rangeStart) : (int) timestamp);
                         }
@@ -266,12 +271,19 @@ public class TransAacHandlerPure {
 
         @Override
         public byte[] getRawFrame() {
-            int len = mRawQueue.size();
-            if (len > 0) {
-                synchronized (mRawQueue) {
-                    return mRawQueue.poll();
-                }
+//            int len = mRawQueue.size();
+//            if (len > 0) {
+//                synchronized (mRawQueue) {
+//                    return mRawQueue.poll();
+//                }
+//            }
+//            return null;
+            try {
+                return mRawQueue.take();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+
             return null;
         }
 
@@ -294,7 +306,6 @@ public class TransAacHandlerPure {
         private OnProgressListener listener;
         private long last;
         private int sampleRate;
-        private int pcmEncoding;
         private int channelCount;
 
         public EncodeTask(String outFile, IDataObtain obtain, OnProgressListener listener) {
@@ -303,9 +314,8 @@ public class TransAacHandlerPure {
             this.listener = listener;
         }
 
-        public void setAudioParams(int sampleRate, int pcmEncoding, int channelCount) {
+        public void setAudioParams(int sampleRate, int channelCount) {
             this.sampleRate = sampleRate;
-            this.pcmEncoding = pcmEncoding;
             this.channelCount = channelCount;
         }
 
@@ -447,8 +457,7 @@ public class TransAacHandlerPure {
             encoder = MediaCodec.createEncoderByType(mime);
             MediaFormat format = MediaFormat.createAudioFormat(mime, sampleRate, channelCount);
             format.setInteger(MediaFormat.KEY_BIT_RATE, 96000);
-            format.setInteger(MediaFormat.KEY_PCM_ENCODING, pcmEncoding);
-            format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 20 * 1024);
+            format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 512 * 1024);
             format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
             logMsg(" New  " + format.toString());
             encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);

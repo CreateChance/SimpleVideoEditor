@@ -7,12 +7,16 @@ package com.createchance.simplevideoeditor;
  * @date 27/03/2018
  */
 
-public interface ActionCallback {
-    void onStarted(int event);
+public abstract class ActionCallback {
+    public void onStarted() {
+    }
 
-    void onProgress(int event, float progress);
+    public void onProgress(float progress) {
+    }
 
-    void onSuccess(int event);
+    public void onSuccess() {
+    }
 
-    void onFailed(int event);
+    public void onFailed() {
+    }
 }
