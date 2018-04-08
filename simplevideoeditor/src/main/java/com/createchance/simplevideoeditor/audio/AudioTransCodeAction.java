@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -34,7 +35,7 @@ public class AudioTransCodeAction extends AbstractAction {
 
     private static final String TAG = "AudioTransCodeAction";
 
-    private BlockingQueue<byte[]> mRawQueue;
+    private BlockingQueue<RawBuffer> mRawQueue = new LinkedBlockingQueue<>(10);
 
     @Override
     public void start(ActionCallback callback) {
@@ -135,21 +136,10 @@ public class AudioTransCodeAction extends AbstractAction {
         }
     }
 
-    private interface IDataObtain {
-        byte[] getRawFrame();
-
-        boolean isFinish();
-    }
-
-    private class DecodeWorker implements Runnable, IDataObtain {
+    private class DecodeWorker implements Runnable {
         private static final long TIME_OUT = 5000;
         private MediaExtractor extractor;
         private MediaCodec codec;
-        private boolean isFinish = false;
-
-        private DecodeWorker() {
-            mRawQueue = new LinkedBlockingQueue<>(10);
-        }
 
         @Override
         public void run() {
@@ -171,7 +161,6 @@ public class AudioTransCodeAction extends AbstractAction {
                 }
             } finally {
                 release();
-                isFinish = true;
             }
         }
 
@@ -236,9 +225,8 @@ public class AudioTransCodeAction extends AbstractAction {
                     if (inIndex >= 0) {
                         ByteBuffer buffer = inputBuffers[inIndex];
                         int sampleSize = extractor.readSampleData(buffer, 0);
-                        long timestampTemp = extractor.getSampleTime();
-                        timestamp = timestampTemp / 1000;
-                        if (timestamp > mDurationMs) {
+                        timestamp = extractor.getSampleTime();
+                        if (timestamp > mDurationMs * 1000) {
                             sampleSize = -1;
                         }
                         if (sampleSize <= 0) {
@@ -254,7 +242,7 @@ public class AudioTransCodeAction extends AbstractAction {
                                     inIndex,
                                     0,
                                     sampleSize,
-                                    timestampTemp,
+                                    timestamp,
                                     0);
                             extractor.advance();
                         }
@@ -268,7 +256,7 @@ public class AudioTransCodeAction extends AbstractAction {
                     case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
                         MediaFormat mf = codec.getOutputFormat();
                         // start encode worker
-                        EncodeWorker encodeTask = new EncodeWorker(this);
+                        EncodeWorker encodeTask = new EncodeWorker();
                         int sampleRate = mf.getInteger(MediaFormat.KEY_SAMPLE_RATE);
                         int channelCount = mf.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
                         encodeTask.setAudioParams(sampleRate, channelCount);
@@ -278,53 +266,37 @@ public class AudioTransCodeAction extends AbstractAction {
                         Log.d(TAG, "dequeueOutputBuffer timed out!");
                         break;
                     default:
-                        ByteBuffer buffer = outputBuffers[outIndex];
-                        byte[] outData = new byte[info.size];
-                        buffer.get(outData, 0, info.size);
+                        if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                            mRawQueue.put(new RawBuffer(null, true, timestamp));
+                        } else {
+                            ByteBuffer buffer = outputBuffers[outIndex];
+                            byte[] outData = new byte[info.size];
+                            buffer.get(outData, 0, info.size);
+                            mRawQueue.put(new RawBuffer(outData, false, timestamp));
+                        }
                         codec.releaseOutputBuffer(outIndex, true);
-                        mRawQueue.put(outData);
                         break;
                 }
                 if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                    Log.d(TAG, "decode done!");
+                    Log.d(TAG, "decode20, reach audio eos.");
                     break;
                 }
             }
+
+            Log.d(TAG, "decode done!");
         }
 
         private void decode21() {
 
         }
-
-        @Override
-        public byte[] getRawFrame() {
-            try {
-                return mRawQueue.take();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        public boolean isFinish() {
-            return isFinish;
-        }
     }
 
     private class EncodeWorker implements Runnable {
         private static final long TIME_OUT = 5000;
-        private IDataObtain obtain;
         private MediaCodec encoder;
         private OutputStream mOutput;
-        private long last;
         private int sampleRate;
         private int channelCount;
-
-        private EncodeWorker(IDataObtain obtain) {
-            this.obtain = obtain;
-        }
 
         public void setAudioParams(int sampleRate, int channelCount) {
             this.sampleRate = sampleRate;
@@ -336,7 +308,7 @@ public class AudioTransCodeAction extends AbstractAction {
             try {
                 prepare();
 
-                encode();
+                encode20();
             } catch (Exception e) {
                 e.printStackTrace();
                 if (mCallback != null) {
@@ -358,56 +330,50 @@ public class AudioTransCodeAction extends AbstractAction {
             mOutput = new DataOutputStream(new FileOutputStream(mOutputFile));
         }
 
-        private void encode() throws IOException {
-            boolean isFinish = false;
+        @TargetApi(20)
+        private void encode20() throws IOException, InterruptedException {
+            boolean decodeDone = false;
+            ByteBuffer[] inputBuffers = encoder.getInputBuffers();
+            ByteBuffer[] outputBuffers = encoder.getOutputBuffers();
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+
             while (true) {
-                if (!isFinish) {
-                    Log.d(TAG, "encode, get raw data.");
-                    byte[] rawData = obtain.getRawFrame();
-                    if (rawData == null) {
-                        if (obtain.isFinish()) {
-                            isFinish = true;
-                            Log.d(TAG, "encode, get input buffer.");
-                            int inIndex = encoder.dequeueInputBuffer(TIME_OUT);
+                if (!decodeDone) {
+                    RawBuffer rawBuffer = mRawQueue.take();
+                    if (rawBuffer.isLast) {
+                        decodeDone = true;
+                        int inIndex = encoder.dequeueInputBuffer(TIME_OUT);
+                        if (inIndex >= 0) {
                             encoder.queueInputBuffer(
                                     inIndex,
                                     0,
                                     0,
-                                    0,
-                                    MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-                        } else {
-                            try {
-                                Thread.sleep(10);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+                                    rawBuffer.sampleTime,
+                                    MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                            );
                         }
-                        continue;
-                    }
-                    ByteBuffer[] inputBuffers = encoder.getInputBuffers();
-
-                    int inIndex = encoder.dequeueInputBuffer(TIME_OUT);
-                    if (inIndex >= 0) {
-                        ByteBuffer inputBuffer = inputBuffers[inIndex];
-                        inputBuffer.clear();
-                        inputBuffer.put(rawData);
-                        encoder.queueInputBuffer(
-                                inIndex,
-                                0,
-                                rawData.length,
-                                System.nanoTime(),
-                                0);
+                    } else {
+                        int inIndex = encoder.dequeueInputBuffer(TIME_OUT);
+                        if (inIndex >= 0) {
+                            ByteBuffer inputBuffer = inputBuffers[inIndex];
+                            inputBuffer.clear();
+                            inputBuffer.put(rawBuffer.data);
+                            encoder.queueInputBuffer(
+                                    inIndex,
+                                    0,
+                                    rawBuffer.data.length,
+                                    rawBuffer.sampleTime,
+                                    0);
+                        }
                     }
                 }
-                ByteBuffer[] outputBuffers = encoder.getOutputBuffers();
-                MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-                int outIndex = encoder.dequeueOutputBuffer(info, TIME_OUT);
-                if (outIndex >= 0) {
-                    if (last == 0) {
-                        last = System.currentTimeMillis();
-                    }
-                    last = System.currentTimeMillis();
-                    while (outIndex >= 0) {
+
+                while (true) {
+                    int outIndex = encoder.dequeueOutputBuffer(info, TIME_OUT);
+                    if (outIndex >= 0) {
+                        if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                            break;
+                        }
                         ByteBuffer outputBuffer = outputBuffers[outIndex];
                         int len = info.size + 7;
                         byte[] outData = new byte[len];
@@ -415,14 +381,14 @@ public class AudioTransCodeAction extends AbstractAction {
                         outputBuffer.get(outData, 7, info.size);
                         encoder.releaseOutputBuffer(outIndex, false);
                         mOutput.write(outData);
-                        outIndex = encoder.dequeueOutputBuffer(info, TIME_OUT);
-//                        if (mCallback != null) {
-//                            mCallback.onProgress(timestamp / mDurationMs * 1.0f);
-//                        }
+                        if (mCallback != null) {
+                            mCallback.onProgress(info.presentationTimeUs / (mDurationMs * 1000.0f));
+                        }
+                    } else {
+                        break;
                     }
                 }
 
-                Log.d(TAG, "encode flag: " + (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM));
                 if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                     Log.d(TAG, "encode reach end of stream!");
                     if (mCallback != null) {
@@ -472,6 +438,26 @@ public class AudioTransCodeAction extends AbstractAction {
             packet[4] = (byte) ((packetLen & 0x7FF) >> 3);
             packet[5] = (byte) (((packetLen & 7) << 5) + 0x1F);
             packet[6] = (byte) 0xFC;
+        }
+    }
+
+    private class RawBuffer {
+        byte[] data;
+        boolean isLast;
+        long sampleTime;
+
+        private RawBuffer(byte[] data, boolean isLast, long sampleTime) {
+            this.data = data;
+            this.isLast = isLast;
+            this.sampleTime = sampleTime;
+        }
+
+        @Override
+        public String toString() {
+            return "RawBuffer{" +
+                    "data=" + Arrays.toString(data) +
+                    ", isLast=" + isLast +
+                    '}';
         }
     }
 }
