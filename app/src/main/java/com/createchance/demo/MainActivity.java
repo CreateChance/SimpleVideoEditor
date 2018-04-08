@@ -8,6 +8,7 @@ import android.view.View;
 
 import com.createchance.simplevideoeditor.ActionCallback;
 import com.createchance.simplevideoeditor.audio.AudioTransCodeAction;
+import com.createchance.simplevideoeditor.video.VideoBgmAddAction;
 
 import java.io.File;
 
@@ -56,34 +57,34 @@ public class MainActivity extends AppCompatActivity {
 //        );
 //        transAacHandlerPure.start();
 
-        AudioTransCodeAction transCodeAction = new AudioTransCodeAction.Builder()
-                .transCode(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
-                .to(new File(Environment.getExternalStorageDirectory(), "videoeditor/transcode.aac"))
-                .from(10 * 1000)
-                .duration(10 * 1000)
-                .targetFormat(AudioTransCodeAction.FORMAT.AAC)
-                .build();
-        transCodeAction.start(new ActionCallback() {
-            @Override
-            public void onStarted() {
-                Log.d(TAG, "onStarted: ");
-            }
-
-            @Override
-            public void onProgress(float progress) {
-                Log.d(TAG, "onProgress: " + progress);
-            }
-
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "onSuccess: ");
-            }
-
-            @Override
-            public void onFailed() {
-                Log.d(TAG, "onFailed: ");
-            }
-        });
+//        AudioTransCodeAction transCodeAction = new AudioTransCodeAction.Builder()
+//                .transCode(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
+//                .to(new File(Environment.getExternalStorageDirectory(), "videoeditor/transcode.aac"))
+//                .from(10 * 1000)
+//                .duration(10 * 1000)
+//                .targetFormat(AudioTransCodeAction.FORMAT.AAC)
+//                .build();
+//        transCodeAction.start(new ActionCallback() {
+//            @Override
+//            public void onStarted() {
+//                Log.d(TAG, "onStarted: ");
+//            }
+//
+//            @Override
+//            public void onProgress(float progress) {
+//                Log.d(TAG, "onProgress: " + progress);
+//            }
+//
+//            @Override
+//            public void onSuccess() {
+//                Log.d(TAG, "onSuccess: ");
+//            }
+//
+//            @Override
+//            public void onFailed() {
+//                Log.d(TAG, "onFailed: ");
+//            }
+//        });
 
 //        Test.getPcmData(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"),
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/output1.pcm"));
@@ -94,36 +95,36 @@ public class MainActivity extends AppCompatActivity {
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/mixed.pcm")
 //        );
 
-//        VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
-//                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"))
-//                .withBgm(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
-//                .videoFrom(5 * 1000)
-//                .videoDuration(20 * 1000)
-//                .bgmFrom(30 * 1000)
-//                .override(true)
-//                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/withbgm.mp4"))
-//                .build();
-//        bgmAddAction.start(new ActionCallback() {
-//            @Override
-//            public void onStarted(int event) {
-//
-//            }
-//
-//            @Override
-//            public void onProgress(int event, float progress) {
-//
-//            }
-//
-//            @Override
-//            public void onSuccess(int event) {
-//
-//            }
-//
-//            @Override
-//            public void onFailed(int event) {
-//
-//            }
-//        });
+        VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
+                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"))
+                .withBgm(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
+                .videoFrom(5 * 1000)
+                .videoDuration(20 * 1000)
+                .bgmFrom(2 * 1000)
+                .override(true)
+                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/withbgm.mp4"))
+                .build();
+        bgmAddAction.start(new ActionCallback() {
+            @Override
+            public void onStarted() {
+
+            }
+
+            @Override
+            public void onProgress(float progress) {
+
+            }
+
+            @Override
+            public void onSuccess() {
+
+            }
+
+            @Override
+            public void onFailed() {
+
+            }
+        });
 
 //        Test.addBackgroundMusic(
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/music.aac"),
