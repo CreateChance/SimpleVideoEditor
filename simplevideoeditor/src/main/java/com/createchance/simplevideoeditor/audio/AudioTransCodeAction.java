@@ -7,6 +7,7 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaPlayer;
 import android.os.Build;
+import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -458,27 +459,24 @@ public class AudioTransCodeAction extends AbstractAction {
 
             while (true) {
                 if (!decodeDone) {
-                    RawBuffer rawBuffer = mRawQueue.take();
-                    if (rawBuffer.isLast) {
-                        decodeDone = true;
-                        int inIndex = encoder.dequeueInputBuffer(TIME_OUT);
-                        if (inIndex >= 0) {
+                    int inputBufferId = encoder.dequeueInputBuffer(TIME_OUT);
+                    if (inputBufferId >= 0) {
+                        RawBuffer rawBuffer = mRawQueue.take();
+                        if (rawBuffer.isLast) {
+                            decodeDone = true;
                             encoder.queueInputBuffer(
-                                    inIndex,
+                                    inputBufferId,
                                     0,
                                     0,
                                     rawBuffer.sampleTime,
                                     MediaCodec.BUFFER_FLAG_END_OF_STREAM
                             );
-                        }
-                    } else {
-                        int inIndex = encoder.dequeueInputBuffer(TIME_OUT);
-                        if (inIndex >= 0) {
-                            ByteBuffer inputBuffer = inputBuffers[inIndex];
+                        } else {
+                            ByteBuffer inputBuffer = inputBuffers[inputBufferId];
                             inputBuffer.clear();
                             inputBuffer.put(rawBuffer.data);
                             encoder.queueInputBuffer(
-                                    inIndex,
+                                    inputBufferId,
                                     0,
                                     rawBuffer.data.length,
                                     rawBuffer.sampleTime,
@@ -499,11 +497,11 @@ public class AudioTransCodeAction extends AbstractAction {
 
             while (true) {
                 if (!decodeDone) {
-                    RawBuffer rawBuffer = mRawQueue.take();
-                    if (rawBuffer.isLast) {
-                        decodeDone = true;
-                        int inputBufferId = encoder.dequeueInputBuffer(TIME_OUT);
-                        if (inputBufferId >= 0) {
+                    int inputBufferId = encoder.dequeueInputBuffer(TIME_OUT);
+                    if (inputBufferId >= 0) {
+                        RawBuffer rawBuffer = mRawQueue.take();
+                        if (rawBuffer.isLast) {
+                            decodeDone = true;
                             encoder.queueInputBuffer(
                                     inputBufferId,
                                     0,
@@ -511,10 +509,7 @@ public class AudioTransCodeAction extends AbstractAction {
                                     rawBuffer.sampleTime,
                                     MediaCodec.BUFFER_FLAG_END_OF_STREAM
                             );
-                        }
-                    } else {
-                        int inputBufferId = encoder.dequeueInputBuffer(TIME_OUT);
-                        if (inputBufferId >= 0) {
+                        } else {
                             ByteBuffer inputBuffer = encoder.getInputBuffer(inputBufferId);
                             inputBuffer.clear();
                             inputBuffer.put(rawBuffer.data);
@@ -533,7 +528,6 @@ public class AudioTransCodeAction extends AbstractAction {
         }
 
         private void release() {
-
         }
     }
 

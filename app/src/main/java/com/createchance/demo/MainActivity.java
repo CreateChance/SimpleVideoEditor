@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
 //        Test.getPcmData(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"),
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/output1.pcm"));
-//        Test.playPcm(new File(Environment.getExternalStorageDirectory(), "videoeditor/mixed.pcm"));
+//        Test.playPcm(new File(Environment.getExternalStorageDirectory(), "videoeditor/tmp.pcm"));
 //        Test.mixPcm(
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/output.pcm"),
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/output1.pcm"),
