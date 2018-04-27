@@ -1,5 +1,6 @@
 package com.createchance.demo;
 
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -7,8 +8,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.createchance.simplevideoeditor.ActionCallback;
-import com.createchance.simplevideoeditor.audio.AudioTransCodeAction;
-import com.createchance.simplevideoeditor.video.VideoBgmAddAction;
+import com.createchance.simplevideoeditor.video.VideoWatermarkAddAction;
 
 import java.io.File;
 
@@ -57,34 +57,34 @@ public class MainActivity extends AppCompatActivity {
 //        );
 //        transAacHandlerPure.start();
 
-        AudioTransCodeAction transCodeAction = new AudioTransCodeAction.Builder()
-                .transCode(new File(Environment.getExternalStorageDirectory(), "videoeditor/music1.mp3"))
-                .to(new File(Environment.getExternalStorageDirectory(), "videoeditor/transcode.aac"))
-//                .from(20 * 1000)
-//                .duration(10 * 1000)
-                .targetFormat(AudioTransCodeAction.FORMAT.AAC)
-                .build();
-        transCodeAction.start(new ActionCallback() {
-            @Override
-            public void onStarted() {
-                Log.d(TAG, "onStarted: ");
-            }
-
-            @Override
-            public void onProgress(float progress) {
-//                Log.d(TAG, "onProgress: " + progress);
-            }
-
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "onSuccess: ");
-            }
-
-            @Override
-            public void onFailed() {
-                Log.d(TAG, "onFailed: ");
-            }
-        });
+//        AudioTransCodeAction transCodeAction = new AudioTransCodeAction.Builder()
+//                .transCode(new File(Environment.getExternalStorageDirectory(), "videoeditor/music1.mp3"))
+//                .to(new File(Environment.getExternalStorageDirectory(), "videoeditor/transcode.aac"))
+////                .from(20 * 1000)
+////                .duration(10 * 1000)
+//                .targetFormat(AudioTransCodeAction.FORMAT.AAC)
+//                .build();
+//        transCodeAction.start(new ActionCallback() {
+//            @Override
+//            public void onStarted() {
+//                Log.d(TAG, "onStarted: ");
+//            }
+//
+//            @Override
+//            public void onProgress(float progress) {
+////                Log.d(TAG, "onProgress: " + progress);
+//            }
+//
+//            @Override
+//            public void onSuccess() {
+//                Log.d(TAG, "onSuccess: ");
+//            }
+//
+//            @Override
+//            public void onFailed() {
+//                Log.d(TAG, "onFailed: ");
+//            }
+//        });
 
 //        Test.getPcmData(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"),
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/output1.pcm"));
@@ -198,5 +198,38 @@ public class MainActivity extends AppCompatActivity {
 //                Log.d(TAG, "onFailed: ");
 //            }
 //        });
+
+        VideoWatermarkAddAction watermarkAddAction = new VideoWatermarkAddAction.Builder()
+                .input(new File(Environment.getExternalStorageDirectory(), "input.mp4"))
+                .addWatermark(BitmapFactory.decodeResource(getResources(), R.drawable.watermark))
+                .atXPos(200)
+                .atYPos(400)
+                .output(new File(Environment.getExternalStorageDirectory(), "withwatermark.mp4"))
+                .build();
+        watermarkAddAction.start(new ActionCallback() {
+            @Override
+            public void onStarted() {
+                super.onStarted();
+                Log.d(TAG, "onStarted: ");
+            }
+
+            @Override
+            public void onProgress(float progress) {
+                super.onProgress(progress);
+                Log.d(TAG, "onProgress, progress: " + progress);
+            }
+
+            @Override
+            public void onSuccess() {
+                super.onSuccess();
+                Log.d(TAG, "onSuccess: ");
+            }
+
+            @Override
+            public void onFailed() {
+                super.onFailed();
+                Log.d(TAG, "onFailed: ");
+            }
+        });
     }
 }
