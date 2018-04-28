@@ -1,4 +1,4 @@
-package com.createchance.simplevideoeditor.audio;
+package com.createchance.simplevideoeditor;
 
 import android.annotation.TargetApi;
 import android.media.MediaCodec;
@@ -7,13 +7,8 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaPlayer;
 import android.os.Build;
-import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
-
-import com.createchance.simplevideoeditor.AbstractAction;
-import com.createchance.simplevideoeditor.ActionCallback;
-import com.createchance.simplevideoeditor.ActionRunner;
 
 import java.io.DataOutputStream;
 import java.io.File;

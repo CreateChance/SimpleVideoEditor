@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.createchance.simplevideoeditor.video;
+package com.createchance.simplevideoeditor;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.EGL14;
@@ -52,7 +52,8 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
     private SurfaceTexture mSurfaceTexture;
     private Surface mSurface;
 
-    private Object mFrameSyncObject = new Object();     // guards mFrameAvailable
+    // guards mFrameAvailable
+    private Object mFrameSyncObject = new Object();
     private boolean mFrameAvailable;
 
     private TextureRender mTextureRender;

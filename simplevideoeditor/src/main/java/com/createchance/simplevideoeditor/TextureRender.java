@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.createchance.simplevideoeditor.video;
+package com.createchance.simplevideoeditor;
 
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;

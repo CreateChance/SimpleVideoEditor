@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.createchance.simplevideoeditor.video;
+package com.createchance.simplevideoeditor;
 
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;

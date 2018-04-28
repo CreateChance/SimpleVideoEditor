@@ -1,14 +1,10 @@
-package com.createchance.simplevideoeditor.video;
+package com.createchance.simplevideoeditor;
 
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.util.Log;
-
-import com.createchance.simplevideoeditor.AbstractAction;
-import com.createchance.simplevideoeditor.ActionCallback;
-import com.createchance.simplevideoeditor.ActionRunner;
 
 import java.io.File;
 import java.io.IOException;

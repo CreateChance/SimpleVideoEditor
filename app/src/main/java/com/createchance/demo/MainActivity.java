@@ -8,7 +8,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.createchance.simplevideoeditor.ActionCallback;
-import com.createchance.simplevideoeditor.video.VideoWatermarkAddAction;
+import com.createchance.simplevideoeditor.VideoWatermarkAddAction;
 
 import java.io.File;
 
@@ -200,11 +200,11 @@ public class MainActivity extends AppCompatActivity {
 //        });
 
         VideoWatermarkAddAction watermarkAddAction = new VideoWatermarkAddAction.Builder()
-                .input(new File(Environment.getExternalStorageDirectory(), "input.mp4"))
+                .input(new File(Environment.getExternalStorageDirectory(), "videoeditor/input5.mp4"))
                 .addWatermark(BitmapFactory.decodeResource(getResources(), R.drawable.watermark))
                 .atXPos(200)
                 .atYPos(400)
-                .output(new File(Environment.getExternalStorageDirectory(), "withwatermark.mp4"))
+                .output(new File(Environment.getExternalStorageDirectory(), "videoeditor/withwatermark.mp4"))
                 .build();
         watermarkAddAction.start(new ActionCallback() {
             @Override
