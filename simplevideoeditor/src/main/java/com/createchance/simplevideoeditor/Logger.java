@@ -15,7 +15,7 @@ import static com.createchance.simplevideoeditor.Constants.Log.WARN;
  * @date 17/04/2018
  */
 
-class Logger {
+public class Logger {
     static int level = VERBOSE;
 
     static String availableLevel() {

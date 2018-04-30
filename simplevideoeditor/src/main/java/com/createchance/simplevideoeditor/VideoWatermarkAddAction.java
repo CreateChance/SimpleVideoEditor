@@ -29,8 +29,8 @@ public class VideoWatermarkAddAction extends AbstractAction {
     private long mFromMs;
     private long mDurationMs;
     private Bitmap mWatermark;
-    private float mXPos;
-    private float mYPos;
+    private int mXPos;
+    private int mYPos;
 
     private VideoWatermarkAddAction() {
 
@@ -56,11 +56,11 @@ public class VideoWatermarkAddAction extends AbstractAction {
         return mWatermark;
     }
 
-    public float getXPos() {
+    public int getXPos() {
         return mXPos;
     }
 
-    public float getYPos() {
+    public int getYPos() {
         return mYPos;
     }
 
@@ -69,11 +69,18 @@ public class VideoWatermarkAddAction extends AbstractAction {
         super.start(callback);
 
         if (checkRational()) {
+            EditParamsMap.saveParams(EditParamsMap.KEY_VIDEO_WATER_MARK_ADD_ACTION, this);
             WatermarkAddWorker watermarkAddWorker = new WatermarkAddWorker();
             ActionRunner.addTaskToBackground(watermarkAddWorker);
         } else {
             throw new IllegalArgumentException("Params error.");
         }
+    }
+
+    @Override
+    public void release() {
+        super.release();
+        this.mWatermark.recycle();
     }
 
     private boolean checkRational() {
@@ -108,13 +115,13 @@ public class VideoWatermarkAddAction extends AbstractAction {
             return this;
         }
 
-        public Builder atXPos(float posX) {
+        public Builder atXPos(int posX) {
             watermarkAddAction.mXPos = posX;
 
             return this;
         }
 
-        public Builder atYPos(float posY) {
+        public Builder atYPos(int posY) {
             watermarkAddAction.mYPos = posY;
 
             return this;

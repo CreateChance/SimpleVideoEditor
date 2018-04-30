@@ -56,7 +56,7 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
     private Object mFrameSyncObject = new Object();
     private boolean mFrameAvailable;
 
-    private TextureRender mTextureRender;
+    private VideoFrameDrawer mVideoFrameDrawer;
 
     /**
      * Creates an OutputSurface backed by a pbuffer with the specifed dimensions.  The new
@@ -71,37 +71,23 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
         eglSetup(width, height);
         makeCurrent();
 
-        setup(this);
-    }
-
-    /**
-     * Creates an OutputSurface using the current EGL context (rather than establishing a
-     * new one).  Creates a Surface that can be passed to MediaCodec.configure().
-     */
-    public OutputSurface() {
-        setup(this);
-    }
-
-    public OutputSurface(final SurfaceTexture.OnFrameAvailableListener listener) {
-        setup(listener);
+        setup(width, height);
     }
 
     /**
      * Creates instances of TextureRender and SurfaceTexture, and a Surface associated
      * with the SurfaceTexture.
      */
-    private void setup(SurfaceTexture.OnFrameAvailableListener listener) {
-        mTextureRender = new TextureRender();
-        mTextureRender.surfaceCreated();
+    private void setup(int width, int height) {
+        mVideoFrameDrawer = new VideoFrameDrawer();
+        mVideoFrameDrawer.onSurfaceCreated(null, null);
+        mVideoFrameDrawer.onSurfaceChanged(null, width, height);
 
         // Even if we don't access the SurfaceTexture after the constructor returns, we
         // still need to keep a reference to it.  The Surface doesn't retain a reference
         // at the Java level, so if we don't either then the object can get GCed, which
         // causes the native finalizer to run.
-        if (VERBOSE) {
-            Log.d(TAG, "textureID=" + mTextureRender.getTextureId());
-        }
-        mSurfaceTexture = new SurfaceTexture(mTextureRender.getTextureId());
+        mSurfaceTexture = mVideoFrameDrawer.getSurfaceTexture();
 
         // This doesn't work if OutputSurface is created on the thread that CTS started for
         // these test cases.
@@ -114,7 +100,7 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
         //
         // Java language note: passing "this" out of a constructor is generally unwise,
         // but we should be able to get away with it here.
-        mSurfaceTexture.setOnFrameAvailableListener(listener);
+        mSurfaceTexture.setOnFrameAvailableListener(this);
 
         mSurface = new Surface(mSurfaceTexture);
     }
@@ -197,7 +183,7 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
         mEGLContext = EGL14.EGL_NO_CONTEXT;
         mEGLSurface = EGL14.EGL_NO_SURFACE;
 
-        mTextureRender = null;
+        mVideoFrameDrawer = null;
         mSurface = null;
         mSurfaceTexture = null;
     }
@@ -216,13 +202,6 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
      */
     public Surface getSurface() {
         return mSurface;
-    }
-
-    /**
-     * Replaces the fragment shader.
-     */
-    public void changeFragmentShader(String fragmentShader) {
-        mTextureRender.changeFragmentShader(fragmentShader);
     }
 
     /**
@@ -250,10 +229,6 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
             }
             mFrameAvailable = false;
         }
-
-        // Latch the data.
-        mTextureRender.checkGlError("before updateTexImage");
-        mSurfaceTexture.updateTexImage();
     }
 
     /**
@@ -281,7 +256,7 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
         }
 
         // Latch the data.
-        mTextureRender.checkGlError("before updateTexImage");
+//        mTextureRender.checkGlError("before updateTexImage");
         mSurfaceTexture.updateTexImage();
         return true;
     }
@@ -290,12 +265,7 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
      * Draws the data from SurfaceTexture onto the current EGL surface.
      */
     public void drawImage() {
-        mTextureRender.drawFrame(mSurfaceTexture);
-    }
-
-    public void latchImage() {
-        mTextureRender.checkGlError("before updateTexImage");
-        mSurfaceTexture.updateTexImage();
+        mVideoFrameDrawer.onDrawFrame(null);
     }
 
     @Override

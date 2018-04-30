@@ -13,4 +13,8 @@ public abstract class AbstractAction {
     public void start(ActionCallback callback) {
         this.mCallback = callback;
     }
+
+    public void release() {
+        this.mCallback = null;
+    }
 }
