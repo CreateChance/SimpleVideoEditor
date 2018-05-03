@@ -18,6 +18,10 @@ class VideoInfo {
     int audioTrackId = INVALID_TRACK_ID;
     int videoTrackId = INVALID_TRACK_ID;
 
+    VideoInfo(File video) {
+        this.video = video;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

@@ -53,9 +53,10 @@ public class VideoCutAction extends AbstractAction {
     }
 
     @Override
-    public void start(ActionCallback callback) {
-        mCutWorker = new CutWorker();
+    public void start() {
+        onStarted(Constants.STAGE_VIDEO_CUT);
 
+        mCutWorker = new CutWorker();
         WorkRunner.addTaskToBackground(mCutWorker);
     }
 
@@ -103,6 +104,8 @@ public class VideoCutAction extends AbstractAction {
                 // delete output file.
                 mOutputFile.delete();
                 e.printStackTrace();
+
+                onFailed(Constants.STAGE_VIDEO_CUT);
             } finally {
                 release();
             }
@@ -272,6 +275,9 @@ public class VideoCutAction extends AbstractAction {
             }
 
             Log.d(TAG, "Cut file :" + mInputFile + " done!");
+
+            onSucceeded(Constants.STAGE_VIDEO_CUT);
+            execNext();
         }
 
         private void release() {

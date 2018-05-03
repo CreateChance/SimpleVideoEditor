@@ -49,13 +49,14 @@ public class VideoBgmRemoveAction extends AbstractAction {
     }
 
     @Override
-    public void start(ActionCallback callback) {
-        super.start(callback);
+    public void start() {
+        onStarted(Constants.STAGE_BGM_REMOVE);
         if (checkRational()) {
             mRemoveWorker = new RemoveWorker();
             WorkRunner.addTaskToBackground(mRemoveWorker);
         } else {
-            Log.e(TAG, "Remove bgm start failed, params error.");
+            Logger.e(TAG, "Remove bgm start failed, params error.");
+            onFailed(Constants.STAGE_BGM_REMOVE);
         }
     }
 
@@ -120,6 +121,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
                 removeBgm();
             } catch (IOException e) {
                 e.printStackTrace();
+                onFailed(Constants.STAGE_BGM_REMOVE);
             } finally {
                 release();
             }
@@ -218,6 +220,9 @@ public class VideoBgmRemoveAction extends AbstractAction {
             }
 
             Log.d(TAG, "removeBgm done!!");
+            onSucceeded(Constants.STAGE_BGM_REMOVE);
+
+            execNext();
         }
 
         private void release() {

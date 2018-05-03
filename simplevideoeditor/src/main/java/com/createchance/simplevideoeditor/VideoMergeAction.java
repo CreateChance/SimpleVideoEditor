@@ -39,8 +39,8 @@ public class VideoMergeAction extends AbstractAction {
     }
 
     @Override
-    public void start(ActionCallback callback) {
-        super.start(callback);
+    public void start() {
+        onStarted(Constants.STAGE_MERGE);
         mMergeWorker = new MergeWorker();
 
         WorkRunner.addTaskToBackground(mMergeWorker);
@@ -78,17 +78,12 @@ public class VideoMergeAction extends AbstractAction {
         @Override
         public void run() {
             try {
-                if (mCallback != null) {
-                    mCallback.onStarted();
-                }
                 prepare();
 
                 merge();
             } catch (IOException e) {
                 e.printStackTrace();
-                if (mCallback != null) {
-                    mCallback.onFailed();
-                }
+                onFailed(Constants.STAGE_MERGE);
             } finally {
                 release();
             }
@@ -207,17 +202,13 @@ public class VideoMergeAction extends AbstractAction {
                 audioExtractor.release();
                 videoExtractor.release();
 
-                if (mCallback != null) {
-                    mCallback.onProgress(0);
-                }
                 Log.d(TAG, "++++++++++++++++++++++++++++++++++++++merge, finish one file: " + video);
             }
 
             Log.d(TAG, "###############################################merge done!");
 
-            if (mCallback != null) {
-                mCallback.onSuccess();
-            }
+            onSucceeded(Constants.STAGE_MERGE);
+            execNext();
         }
 
         private void release() {

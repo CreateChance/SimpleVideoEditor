@@ -64,14 +64,14 @@ public class VideoWatermarkAddAction extends AbstractAction {
     }
 
     @Override
-    public void start(ActionCallback callback) {
-        super.start(callback);
-
+    public void start() {
+        onStarted(Constants.STAGE_WATER_MARK_ADD);
         if (checkRational()) {
             EditParamsMap.saveParams(EditParamsMap.KEY_VIDEO_WATER_MARK_ADD_ACTION, this);
             WatermarkAddWorker watermarkAddWorker = new WatermarkAddWorker();
             WorkRunner.addTaskToBackground(watermarkAddWorker);
         } else {
+            onFailed(Constants.STAGE_WATER_MARK_ADD);
             throw new IllegalArgumentException("Params error.");
         }
     }
@@ -340,6 +340,9 @@ public class VideoWatermarkAddAction extends AbstractAction {
                     break;
                 }
             }
+
+            onSucceeded(Constants.STAGE_WATER_MARK_ADD);
+            execNext();
         }
 
         private void release() {

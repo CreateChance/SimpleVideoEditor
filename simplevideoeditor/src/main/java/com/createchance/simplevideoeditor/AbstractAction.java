@@ -7,14 +7,46 @@ package com.createchance.simplevideoeditor;
  * @date 25/03/2018
  */
 
-public abstract class AbstractAction {
-    protected ActionCallback mCallback;
+abstract class AbstractAction {
 
-    public void start(ActionCallback callback) {
-        this.mCallback = callback;
+    private AbstractAction mSuccessNext;
+
+    abstract void start();
+
+    void release() {
     }
 
-    public void release() {
-        this.mCallback = null;
+    final void successNext(AbstractAction action) {
+        mSuccessNext = action;
+    }
+
+    protected final void execNext() {
+        if (mSuccessNext != null) {
+            mSuccessNext.start();
+        }
+    }
+
+    protected final void onStarted(int stage) {
+        if (VideoEditorManager.getManager().getCallback() != null) {
+            VideoEditorManager.getManager().getCallback().onStart(stage);
+        }
+    }
+
+    protected final void onProgress(int stage, float progress) {
+        if (VideoEditorManager.getManager().getCallback() != null) {
+            VideoEditorManager.getManager().getCallback().onProgress(stage, progress);
+        }
+    }
+
+    protected final void onSucceeded(int stage) {
+        if (VideoEditorManager.getManager().getCallback() != null) {
+            VideoEditorManager.getManager().getCallback().onSucceeded(stage);
+        }
+    }
+
+    protected final void onFailed(int stage) {
+        if (VideoEditorManager.getManager().getCallback() != null) {
+            VideoEditorManager.getManager().getCallback().onFialed(stage);
+        }
     }
 }

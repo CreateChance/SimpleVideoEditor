@@ -1,15 +1,12 @@
 package com.createchance.demo;
 
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
-import com.createchance.simplevideoeditor.ActionCallback;
 import com.createchance.simplevideoeditor.VideoClipper;
-import com.createchance.simplevideoeditor.VideoWatermarkAddAction;
 
 import java.io.File;
 import java.io.IOException;
@@ -244,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         try {
-            clipper.clipVideo(0,15 * 1000 * 1000);
+            clipper.clipVideo(0, 15 * 1000 * 1000);
         } catch (IOException e) {
             e.printStackTrace();
         }

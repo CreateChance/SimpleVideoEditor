@@ -111,9 +111,8 @@ public class VideoBgmAddAction extends AbstractAction {
     }
 
     @Override
-    public void start(ActionCallback actionCallback) {
-        super.start(actionCallback);
-
+    public void start() {
+        onStarted(Constants.STAGE_BGM_ADD);
         if (checkRational()) {
             try {
                 String bgmMime = getBgmMime();
@@ -131,7 +130,8 @@ public class VideoBgmAddAction extends AbstractAction {
                 e.printStackTrace();
             }
         } else {
-            Log.e(TAG, "Add bgm start failed, params error.");
+            Logger.e(TAG, "Add bgm start failed, params error.");
+            onFailed(Constants.STAGE_BGM_ADD);
         }
     }
 
@@ -148,22 +148,17 @@ public class VideoBgmAddAction extends AbstractAction {
                 .duration(mBgmDurationMs)
                 .targetFormat(AudioTransCodeAction.FORMAT.AAC)
                 .build();
-        audioTransCodeAction.start(new ActionCallback() {
-            @Override
-            public void onSuccess() {
-                super.onSuccess();
-
-                addAacBgm(new File(mOutFile.getParent(), "aactmp.aac"), true);
-            }
-
-            @Override
-            public void onFailed() {
-                super.onFailed();
-                if (mCallback != null) {
-                    mCallback.onFailed();
-                }
-            }
-        });
+        VideoBgmAddAction videoBgmAddAction = new VideoBgmAddAction();
+        videoBgmAddAction.mInputFile = mInputFile;
+        videoBgmAddAction.mOutFile = mOutFile;
+        videoBgmAddAction.mBgmFile = new File(mOutFile.getParent(), "aactmp.aac");
+        videoBgmAddAction.mVideoStartPosMs = mVideoStartPosMs;
+        videoBgmAddAction.mVideoDurationMs = mVideoDurationMs;
+        videoBgmAddAction.mBgmStartPosMs = mBgmStartPosMs;
+        videoBgmAddAction.mBgmDurationMs = mBgmDurationMs;
+        videoBgmAddAction.mOverride = mOverride;
+        audioTransCodeAction.successNext(videoBgmAddAction);
+        audioTransCodeAction.start();
     }
 
     private String getBgmMime() throws IOException {
@@ -271,6 +266,7 @@ public class VideoBgmAddAction extends AbstractAction {
                 e.printStackTrace();
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
+                onFailed(Constants.STAGE_BGM_ADD);
             } finally {
                 release();
                 if (deleteAfterUse) {
@@ -377,6 +373,8 @@ public class VideoBgmAddAction extends AbstractAction {
             }
 
             Log.d(TAG, "addBgm done!");
+            onSucceeded(Constants.STAGE_BGM_ADD);
+            execNext();
         }
 
         private void release() {

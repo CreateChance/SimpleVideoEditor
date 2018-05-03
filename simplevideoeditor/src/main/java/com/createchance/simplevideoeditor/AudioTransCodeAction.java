@@ -28,7 +28,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @date 25/03/2018
  */
 
-public class AudioTransCodeAction extends AbstractAction {
+class AudioTransCodeAction extends AbstractAction {
 
     private static final String TAG = "AudioTransCodeAction";
 
@@ -37,8 +37,7 @@ public class AudioTransCodeAction extends AbstractAction {
     private MediaCodec decoder, encoder;
 
     @Override
-    public void start(ActionCallback callback) {
-        super.start(callback);
+    public void start() {
         if (checkRational()) {
             DecodeInputWorker decodeWorker = new DecodeInputWorker();
             WorkRunner.addTaskToBackground(decodeWorker);
@@ -141,9 +140,6 @@ public class AudioTransCodeAction extends AbstractAction {
 
         @Override
         public void run() {
-            if (mCallback != null) {
-                mCallback.onStarted();
-            }
             try {
                 prepare();
 
@@ -158,9 +154,6 @@ public class AudioTransCodeAction extends AbstractAction {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                if (mCallback != null) {
-                    mCallback.onFailed();
-                }
             } finally {
                 release();
             }
@@ -427,9 +420,6 @@ public class AudioTransCodeAction extends AbstractAction {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                if (mCallback != null) {
-                    mCallback.onFailed();
-                }
             } finally {
                 release();
             }
@@ -569,15 +559,9 @@ public class AudioTransCodeAction extends AbstractAction {
                     outputBuffer.get(outData, 7, info.size);
                     encoder.releaseOutputBuffer(outIndex, false);
                     mOutput.write(outData);
-                    if (mCallback != null) {
-                        float progress = info.presentationTimeUs / ((mStartPosMs + mDurationMs) * 1000.0f);
-                        mCallback.onProgress(progress > 1.0f ? 1.0f : progress);
-                    }
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                         Log.d(TAG, "encode reach end of stream!");
-                        if (mCallback != null) {
-                            mCallback.onSuccess();
-                        }
+                        execNext();
                         break;
                     }
                 }
@@ -599,15 +583,9 @@ public class AudioTransCodeAction extends AbstractAction {
                     outputBuffer.get(outData, 7, info.size);
                     encoder.releaseOutputBuffer(outIndex, false);
                     mOutput.write(outData);
-                    if (mCallback != null) {
-                        float progress = info.presentationTimeUs / ((mStartPosMs + mDurationMs) * 1000.0f);
-                        mCallback.onProgress(progress > 1.0f ? 1.0f : progress);
-                    }
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                         Log.d(TAG, "encode reach end of stream!");
-                        if (mCallback != null) {
-                            mCallback.onSuccess();
-                        }
+                        execNext();
                         break;
                     }
                 }

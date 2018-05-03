@@ -15,4 +15,11 @@ public class Constants {
         public static final int ERROR = 5;
         public static final int NOTHING = 6;
     }
+
+    public static final int STAGE_INFO_PARSE = 100;
+    public static final int STAGE_BGM_REMOVE = 101;
+    public static final int STAGE_BGM_ADD = 102;
+    public static final int STAGE_VIDEO_CUT = 103;
+    public static final int STAGE_MERGE = 104;
+    public static final int STAGE_WATER_MARK_ADD = 105;
 }

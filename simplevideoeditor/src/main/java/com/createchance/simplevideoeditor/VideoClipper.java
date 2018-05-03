@@ -322,12 +322,7 @@ public class VideoClipper {
         inputSurface.makeCurrent();
         videoEncoder.start();
 
-
-        VideoInfo info = new VideoInfo();
-        info.width = videoWidth;
-        info.height = videoHeight;
-        info.rotation = videoRotation;
-        outputSurface = new OutputSurface(info.width, info.height);
+        outputSurface = new OutputSurface(videoWidth, videoHeight);
 
         videoDecoder.configure(videoFormat, outputSurface.getSurface(), null, 0);
         videoDecoder.start();//解码器启动
