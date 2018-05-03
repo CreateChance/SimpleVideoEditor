@@ -56,7 +56,7 @@ public class VideoCutAction extends AbstractAction {
     public void start(ActionCallback callback) {
         mCutWorker = new CutWorker();
 
-        ActionRunner.addTaskToBackground(mCutWorker);
+        WorkRunner.addTaskToBackground(mCutWorker);
     }
 
     public static class Builder {

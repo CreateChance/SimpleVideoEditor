@@ -137,7 +137,7 @@ public class VideoBgmAddAction extends AbstractAction {
 
     private void addAacBgm(File bgm, boolean deleteAfterUse) {
         AacBgmAddWorker aacBgmAddWorker = new AacBgmAddWorker(bgm, deleteAfterUse);
-        ActionRunner.addTaskToBackground(aacBgmAddWorker);
+        WorkRunner.addTaskToBackground(aacBgmAddWorker);
     }
 
     private void addMpegBgm() {

@@ -41,7 +41,7 @@ public class AudioTransCodeAction extends AbstractAction {
         super.start(callback);
         if (checkRational()) {
             DecodeInputWorker decodeWorker = new DecodeInputWorker();
-            ActionRunner.addTaskToBackground(decodeWorker);
+            WorkRunner.addTaskToBackground(decodeWorker);
         }
     }
 
@@ -149,7 +149,7 @@ public class AudioTransCodeAction extends AbstractAction {
 
                 // start decode output worker
                 DecodeOutputWorker decoderOutputWorker = new DecodeOutputWorker();
-                ActionRunner.addTaskToBackground(decoderOutputWorker);
+                WorkRunner.addTaskToBackground(decoderOutputWorker);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     decodeInput21();
@@ -328,7 +328,7 @@ public class AudioTransCodeAction extends AbstractAction {
                         int sampleRate = mf.getInteger(MediaFormat.KEY_SAMPLE_RATE);
                         int channelCount = mf.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
                         encodeTask.setAudioParams(sampleRate, channelCount);
-                        ActionRunner.addTaskToBackground(encodeTask);
+                        WorkRunner.addTaskToBackground(encodeTask);
                         break;
                     case MediaCodec.INFO_TRY_AGAIN_LATER:
                         Log.d(TAG, "dequeueOutputBuffer timed out!");
@@ -368,7 +368,7 @@ public class AudioTransCodeAction extends AbstractAction {
                         int sampleRate = mf.getInteger(MediaFormat.KEY_SAMPLE_RATE);
                         int channelCount = mf.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
                         encodeTask.setAudioParams(sampleRate, channelCount);
-                        ActionRunner.addTaskToBackground(encodeTask);
+                        WorkRunner.addTaskToBackground(encodeTask);
                         break;
                     case MediaCodec.INFO_TRY_AGAIN_LATER:
                         Log.d(TAG, "dequeueOutputBuffer timed out!");
@@ -418,7 +418,7 @@ public class AudioTransCodeAction extends AbstractAction {
 
                 // start encode output worker
                 EncodeOutputWorker encodeOutputWorker = new EncodeOutputWorker();
-                ActionRunner.addTaskToBackground(encodeOutputWorker);
+                WorkRunner.addTaskToBackground(encodeOutputWorker);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     encodeInput21();

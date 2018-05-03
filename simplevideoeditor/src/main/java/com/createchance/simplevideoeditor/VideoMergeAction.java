@@ -43,7 +43,7 @@ public class VideoMergeAction extends AbstractAction {
         super.start(callback);
         mMergeWorker = new MergeWorker();
 
-        ActionRunner.addTaskToBackground(mMergeWorker);
+        WorkRunner.addTaskToBackground(mMergeWorker);
     }
 
     public static class Builder {

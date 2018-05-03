@@ -70,7 +70,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
         if (checkRational()) {
             EditParamsMap.saveParams(EditParamsMap.KEY_VIDEO_WATER_MARK_ADD_ACTION, this);
             WatermarkAddWorker watermarkAddWorker = new WatermarkAddWorker();
-            ActionRunner.addTaskToBackground(watermarkAddWorker);
+            WorkRunner.addTaskToBackground(watermarkAddWorker);
         } else {
             throw new IllegalArgumentException("Params error.");
         }

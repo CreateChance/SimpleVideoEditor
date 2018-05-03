@@ -53,7 +53,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
         super.start(callback);
         if (checkRational()) {
             mRemoveWorker = new RemoveWorker();
-            ActionRunner.addTaskToBackground(mRemoveWorker);
+            WorkRunner.addTaskToBackground(mRemoveWorker);
         } else {
             Log.e(TAG, "Remove bgm start failed, params error.");
         }

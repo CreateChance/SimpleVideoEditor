@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
  * @date 21/11/2017
  */
 
-public final class ActionRunner {
+public final class WorkRunner {
     /**
      * 自定义的带有优先级的后台线程池
      * 核心线程数为：cpu核心数 + 1
