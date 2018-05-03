@@ -8,9 +8,11 @@ import android.util.Log;
 import android.view.View;
 
 import com.createchance.simplevideoeditor.ActionCallback;
+import com.createchance.simplevideoeditor.VideoClipper;
 import com.createchance.simplevideoeditor.VideoWatermarkAddAction;
 
 import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -199,37 +201,52 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 
-        VideoWatermarkAddAction watermarkAddAction = new VideoWatermarkAddAction.Builder()
-                .input(new File(Environment.getExternalStorageDirectory(), "videoeditor/input5.mp4"))
-                .addWatermark(BitmapFactory.decodeResource(getResources(), R.drawable.watermark))
-                .atXPos(200)
-                .atYPos(400)
-                .output(new File(Environment.getExternalStorageDirectory(), "videoeditor/withwatermark.mp4"))
-                .build();
-        watermarkAddAction.start(new ActionCallback() {
-            @Override
-            public void onStarted() {
-                super.onStarted();
-                Log.d(TAG, "onStarted: ");
-            }
+//        VideoWatermarkAddAction watermarkAddAction = new VideoWatermarkAddAction.Builder()
+//                .input(new File(Environment.getExternalStorageDirectory(), "videoeditor/input5.mp4"))
+//                .addWatermark(BitmapFactory.decodeResource(getResources(), R.drawable.watermark))
+//                .atXPos(200)
+//                .atYPos(400)
+//                .output(new File(Environment.getExternalStorageDirectory(), "videoeditor/withwatermark.mp4"))
+//                .build();
+//        watermarkAddAction.start(new ActionCallback() {
+//            @Override
+//            public void onStarted() {
+//                super.onStarted();
+//                Log.d(TAG, "onStarted: ");
+//            }
+//
+//            @Override
+//            public void onProgress(float progress) {
+//                super.onProgress(progress);
+//                Log.d(TAG, "onProgress, progress: " + progress);
+//            }
+//
+//            @Override
+//            public void onSuccess() {
+//                super.onSuccess();
+//                Log.d(TAG, "onSuccess: ");
+//            }
+//
+//            @Override
+//            public void onFailed() {
+//                super.onFailed();
+//                Log.d(TAG, "onFailed: ");
+//            }
+//        });
 
+        VideoClipper clipper = new VideoClipper();
+        clipper.setInputVideoPath(new File(Environment.getExternalStorageDirectory(), "videoeditor/input1.mp4").getAbsolutePath());
+        clipper.setOutputVideoPath(new File(Environment.getExternalStorageDirectory(), "videoeditor/withwatermark.mp4").getAbsolutePath());
+        clipper.setOnVideoCutFinishListener(new VideoClipper.OnVideoCutFinishListener() {
             @Override
-            public void onProgress(float progress) {
-                super.onProgress(progress);
-                Log.d(TAG, "onProgress, progress: " + progress);
-            }
-
-            @Override
-            public void onSuccess() {
-                super.onSuccess();
-                Log.d(TAG, "onSuccess: ");
-            }
-
-            @Override
-            public void onFailed() {
-                super.onFailed();
-                Log.d(TAG, "onFailed: ");
+            public void onFinish() {
+                Log.d(TAG, "onFinish: ");
             }
         });
+        try {
+            clipper.clipVideo(0,15 * 1000 * 1000);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

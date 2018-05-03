@@ -10,7 +10,6 @@ import android.media.MediaMuxer;
 import android.util.Log;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -163,7 +162,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
             try {
                 prepare();
                 addWatermark();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 release();
@@ -172,7 +171,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
             Log.d(TAG, "Watermark add done.");
         }
 
-        private void prepare() throws IOException {
+        private void prepare() throws Exception {
             MediaFormat videoFormat = null;
             // get video info first.
             MediaMetadataRetriever retriever = new MediaMetadataRetriever();
@@ -209,11 +208,6 @@ public class VideoWatermarkAddAction extends AbstractAction {
             muxerStarted = true;
 
             // init decoder and encoder
-            outputSurface = new OutputSurface(videoWidth, videoHeight);
-            decoder = MediaCodec.createDecoderByType("video/avc");
-            decoder.configure(videoFormat, outputSurface.getSurface(), null, 0);
-            decoder.start();
-
             MediaFormat mediaFormat = MediaFormat.createVideoFormat("video/avc", videoWidth, videoHeight);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 3000000);
             mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
@@ -224,6 +218,11 @@ public class VideoWatermarkAddAction extends AbstractAction {
             inputSurface = new InputSurface(encoder.createInputSurface());
             inputSurface.makeCurrent();
             encoder.start();
+
+            outputSurface = new OutputSurface(videoWidth, videoHeight);
+            decoder = MediaCodec.createDecoderByType("video/avc");
+            decoder.configure(videoFormat, outputSurface.getSurface(), null, 0);
+            decoder.start();
         }
 
         private void addWatermark() {
@@ -256,7 +255,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
                     mediaExtractor.advance();
                 }
             } else {
-                Log.d(TAG, "addWatermark, input video has no audio track, so skip.");
+                Log.e(TAG, "addWatermark, input video has no audio track, so skip.");
             }
 
             Log.d(TAG, "addWatermark, handle video track.");
@@ -271,12 +270,14 @@ public class VideoWatermarkAddAction extends AbstractAction {
                     }
 
                     ByteBuffer buffer = decodeInputBuffers[decodeInputBufferId];
+                    buffer.clear();
                     int sampleSize = mediaExtractor.readSampleData(buffer, 0);
                     Log.d(TAG, "addWatermark, read video size: " + sampleSize);
                     if (sampleSize == -1) {
                         videoReadDone = true;
-                        decoder.signalEndOfInputStream();
                         Log.d(TAG, "addWatermark, read video done.");
+//                        decoder.signalEndOfInputStream();
+                        decoder.queueInputBuffer(decodeInputBufferId, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                     } else {
                         decoder.queueInputBuffer(
                                 decodeInputBufferId,
@@ -291,6 +292,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
                 }
 
                 if (!decodeDone) {
+                    Log.d(TAG, "addWatermark, dequeue decode output data.");
                     decodeOutputBufferId = decoder.dequeueOutputBuffer(decodeInfo, TIME_OUT);
                     switch (decodeOutputBufferId) {
                         case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
@@ -302,17 +304,17 @@ public class VideoWatermarkAddAction extends AbstractAction {
                             break;
                         default:
                             if (decodeOutputBufferId >= 0) {
-                                // This waits for the image and renders it after it arrives.
-                                Log.d("TEST", "###########################################################");
                                 decoder.releaseOutputBuffer(decodeOutputBufferId, true);
+                                // This waits for the image and renders it after it arrives.
                                 outputSurface.awaitNewImage();
                                 outputSurface.drawImage();
                                 // Send it to the encoder.
                                 inputSurface.setPresentationTime(decodeInfo.presentationTimeUs * 1000);
+                                Log.d(TAG, "addWatermark: ***********************************************");
                                 inputSurface.swapBuffers();
+                                Log.d(TAG, "addWatermark: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
                             }
                             if ((decodeInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                                encoder.signalEndOfInputStream();
                                 decodeDone = true;
                             }
                             break;

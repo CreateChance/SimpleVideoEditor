@@ -1,51 +1,34 @@
 package com.createchance.simplevideoeditor;
 
-import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
-import static android.opengl.GLES20.GL_DEPTH_BUFFER_BIT;
-import static android.opengl.GLES20.glClear;
-import static android.opengl.GLES20.glClearColor;
+import android.content.res.Resources;
+import android.opengl.GLES20;
 
 /**
- * ${DESC}
- *
- * @author gaochao1-iri
- * @date 28/04/2018
+ * Description:
  */
-public class NoFilter extends AbstractFilter {
+public class NoFilter extends AFilter {
+
+    public NoFilter(Resources res) {
+        super(res);
+    }
 
     @Override
     protected void onCreate() {
-        super.onCreate();
-
-        mVertexShader = "attribute vec4 vPosition;\n" +
-                "attribute vec2 vCoord;\n" +
-                "uniform mat4 vMatrix;\n" +
-                "\n" +
-                "varying vec2 textureCoordinate;\n" +
-                "\n" +
-                "void main(){\n" +
-                "    gl_Position = vMatrix*vPosition;\n" +
-                "    textureCoordinate = vCoord;\n" +
-                "}\n";
-        mFragmentShader = "precision mediump float;\n" +
-                "varying vec2 textureCoordinate;\n" +
-                "uniform sampler2D vTexture;\n" +
-                "void main() {\n" +
-                "    gl_FragColor = texture2D( vTexture, textureCoordinate );\n" +
-                "}\n";
+        createProgramByAssetsFile("shader/base_vertex.sh",
+            "shader/base_fragment.sh");
     }
 
-    @Override
-    protected void onDraw() {
-        super.onDraw();
-    }
-
+    /**
+     * 背景默认为黑色
+     */
     @Override
     protected void onClear() {
-        super.onClear();
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+    }
 
-        // clear screen to black
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    @Override
+    protected void onSizeChanged(int width, int height) {
+
     }
 }
