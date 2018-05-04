@@ -6,7 +6,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
+import com.createchance.simplevideoeditor.VideoBgmAddAction;
 import com.createchance.simplevideoeditor.VideoClipper;
+import com.createchance.simplevideoeditor.VideoEditCallback;
+import com.createchance.simplevideoeditor.VideoEditorManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,35 +98,20 @@ public class MainActivity extends AppCompatActivity {
 //        );
 
 //        VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
-//                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input3.mp4"))
-//                .withBgm(new File(Environment.getExternalStorageDirectory(), "videoeditor/music1.mp3"))
+//                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input1.mp4"))
+//                .withBgm(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.aac"))
 //                .videoFrom(5 * 1000)
 //                .videoDuration(20 * 1000)
 //                .bgmFrom(15 * 1000)
 //                .override(true)
 //                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/withbgm.mp4"))
 //                .build();
-//        bgmAddAction.start(new ActionCallback() {
-//            @Override
-//            public void onStarted() {
-//
-//            }
-//
-//            @Override
-//            public void onProgress(float progress) {
-//
-//            }
-//
-//            @Override
-//            public void onSuccess() {
-//
-//            }
-//
-//            @Override
-//            public void onFailed() {
-//
-//            }
-//        });
+//        VideoEditorManager.getManager()
+//                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input1.mp4"),
+//                new VideoEditCallback())
+//                .withAction(bgmAddAction)
+//                .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/output.mp4"))
+//                .commit();
 
 //        Test.addBackgroundMusic(
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/music.aac"),

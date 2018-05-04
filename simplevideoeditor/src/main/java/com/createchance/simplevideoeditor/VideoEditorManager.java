@@ -81,7 +81,7 @@ public class VideoEditorManager {
             return this;
         }
 
-        private void commit() {
+        public void commit() {
             // check if input file is rational.
             if (inputFile == null ||
                     !inputFile.exists() ||
@@ -98,7 +98,7 @@ public class VideoEditorManager {
             VideoInfoParseAction videoInfoParseAction = new VideoInfoParseAction(inputFile);
             videoInfoParseAction.successNext(actionList.get(0));
             int index = 0;
-            while (index < actionList.size()) {
+            while (index < actionList.size() - 1) {
                 actionList.get(index++).successNext(actionList.get(index++));
             }
             videoInfoParseAction.start();
