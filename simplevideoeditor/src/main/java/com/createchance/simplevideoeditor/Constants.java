@@ -16,10 +16,10 @@ public class Constants {
         public static final int NOTHING = 6;
     }
 
-    public static final int STAGE_INFO_PARSE = 100;
-    public static final int STAGE_BGM_REMOVE = 101;
-    public static final int STAGE_BGM_ADD = 102;
-    public static final int STAGE_VIDEO_CUT = 103;
-    public static final int STAGE_MERGE = 104;
-    public static final int STAGE_WATER_MARK_ADD = 105;
+    public static final String ACTION_REMOVE_BGM = "ActionRemoveVideoBgm";
+    public static final String ACTION_ADD_BGM = "ActionAddVideoBgm";
+    public static final String ACTION_CUT_VIDEO = "ActionCutVideo";
+    public static final String ACTION_MERGE_VIDEOS = "ActionMergeVideos";
+    public static final String ACTION_ADD_WATER_MARK = "ActionAddVideoWatermark";
+    public static final String ACTION_AUDIO_TRANS_CODE = "ActionAudioTransCode";
 }

@@ -21,8 +21,6 @@ public class VideoBgmRemoveAction extends AbstractAction {
 
     private static final String TAG = "VideoBgmRemoveAction";
 
-    private File mInputFile;
-    private File mOutputFile;
     private long mRemoveStartPosMs;
     private long mRemoveDurationMs;
 
@@ -33,7 +31,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
     private RemoveWorker mRemoveWorker;
 
     private VideoBgmRemoveAction() {
-
+        super(Constants.ACTION_REMOVE_BGM);
     }
 
     public File getInputFile() {
@@ -49,18 +47,20 @@ public class VideoBgmRemoveAction extends AbstractAction {
     }
 
     @Override
-    public void start() {
-        onStarted(Constants.STAGE_BGM_REMOVE);
+    protected void start(File inputFile) {
+        super.start(inputFile);
+        onStarted();
         if (checkRational()) {
             mRemoveWorker = new RemoveWorker();
             WorkRunner.addTaskToBackground(mRemoveWorker);
         } else {
             Logger.e(TAG, "Remove bgm start failed, params error.");
-            onFailed(Constants.STAGE_BGM_REMOVE);
+            onFailed();
         }
     }
 
-    private boolean checkRational() {
+    @Override
+    protected boolean checkRational() {
         if (mInputFile == null) {
             return false;
         }
@@ -79,12 +79,6 @@ public class VideoBgmRemoveAction extends AbstractAction {
     public static class Builder {
         private VideoBgmRemoveAction bgmRemoveAction = new VideoBgmRemoveAction();
 
-        public Builder removeBgm(File video) {
-            bgmRemoveAction.mInputFile = video;
-
-            return this;
-        }
-
         public Builder from(long fromMs) {
             bgmRemoveAction.mRemoveStartPosMs = fromMs;
 
@@ -93,12 +87,6 @@ public class VideoBgmRemoveAction extends AbstractAction {
 
         public Builder duration(long durationMs) {
             bgmRemoveAction.mRemoveDurationMs = durationMs;
-
-            return this;
-        }
-
-        public Builder saveAs(File output) {
-            bgmRemoveAction.mOutputFile = output;
 
             return this;
         }
@@ -121,7 +109,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
                 removeBgm();
             } catch (IOException e) {
                 e.printStackTrace();
-                onFailed(Constants.STAGE_BGM_REMOVE);
+                onFailed();
             } finally {
                 release();
             }
@@ -220,9 +208,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
             }
 
             Log.d(TAG, "removeBgm done!!");
-            onSucceeded(Constants.STAGE_BGM_REMOVE);
-
-            execNext();
+            onSucceeded();
         }
 
         private void release() {

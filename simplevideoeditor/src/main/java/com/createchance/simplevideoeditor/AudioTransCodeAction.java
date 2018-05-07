@@ -37,7 +37,9 @@ class AudioTransCodeAction extends AbstractAction {
     private MediaCodec decoder, encoder;
 
     @Override
-    public void start() {
+    void start(File inputFile) {
+        super.start(inputFile);
+        onStarted();
         if (checkRational()) {
             DecodeInputWorker decodeWorker = new DecodeInputWorker();
             WorkRunner.addTaskToBackground(decodeWorker);
@@ -50,14 +52,11 @@ class AudioTransCodeAction extends AbstractAction {
         AAC
     }
 
-    private File mInputFile;
-    private File mOutputFile;
-    private FORMAT mTargetFormat = FORMAT.NONE;
     private long mStartPosMs;
     private long mDurationMs;
 
     private AudioTransCodeAction() {
-
+        super(Constants.ACTION_AUDIO_TRANS_CODE);
     }
 
     public File getInputFile() {
@@ -68,54 +67,18 @@ class AudioTransCodeAction extends AbstractAction {
         return mOutputFile;
     }
 
-    public FORMAT getTargetFormat() {
-        return mTargetFormat;
-    }
+    @Override
+    protected boolean checkRational() {
+        return super.checkRational() &&
+                mInputFile != null &&
+                mOutputFile != null &&
+                mStartPosMs >= 0 &&
+                mDurationMs >= 0;
 
-    private boolean checkRational() {
-        if (mInputFile == null) {
-            return false;
-        }
-
-        if (mOutputFile == null) {
-            return false;
-        }
-
-        if (mTargetFormat == FORMAT.NONE) {
-            return false;
-        }
-
-        if (mStartPosMs < 0) {
-            return false;
-        }
-
-        if (mDurationMs < 0) {
-            return false;
-        }
-
-        return true;
     }
 
     public static class Builder {
         private AudioTransCodeAction transCodeAction = new AudioTransCodeAction();
-
-        public Builder transCode(File inputFile) {
-            transCodeAction.mInputFile = inputFile;
-
-            return this;
-        }
-
-        public Builder to(File outputFile) {
-            transCodeAction.mOutputFile = outputFile;
-
-            return this;
-        }
-
-        public Builder targetFormat(FORMAT format) {
-            transCodeAction.mTargetFormat = format;
-
-            return this;
-        }
 
         public Builder from(long fromMs) {
             transCodeAction.mStartPosMs = fromMs;
@@ -561,7 +524,7 @@ class AudioTransCodeAction extends AbstractAction {
                     mOutput.write(outData);
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                         Log.d(TAG, "encode reach end of stream!");
-                        execNext();
+                        onSucceeded();
                         break;
                     }
                 }
@@ -585,7 +548,7 @@ class AudioTransCodeAction extends AbstractAction {
                     mOutput.write(outData);
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                         Log.d(TAG, "encode reach end of stream!");
-                        execNext();
+                        onSucceeded();
                         break;
                     }
                 }

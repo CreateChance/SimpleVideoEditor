@@ -27,7 +27,7 @@ public class VideoMergeAction extends AbstractAction {
     private MergeWorker mMergeWorker;
 
     private VideoMergeAction() {
-
+        super(Constants.ACTION_MERGE_VIDEOS);
     }
 
     public List<File> getInputFiles() {
@@ -39,8 +39,9 @@ public class VideoMergeAction extends AbstractAction {
     }
 
     @Override
-    public void start() {
-        onStarted(Constants.STAGE_MERGE);
+    protected void start(File inputFile) {
+        super.start(inputFile);
+        onStarted();
         mMergeWorker = new MergeWorker();
 
         WorkRunner.addTaskToBackground(mMergeWorker);
@@ -83,7 +84,7 @@ public class VideoMergeAction extends AbstractAction {
                 merge();
             } catch (IOException e) {
                 e.printStackTrace();
-                onFailed(Constants.STAGE_MERGE);
+                onFailed();
             } finally {
                 release();
             }
@@ -207,8 +208,7 @@ public class VideoMergeAction extends AbstractAction {
 
             Log.d(TAG, "###############################################merge done!");
 
-            onSucceeded(Constants.STAGE_MERGE);
-            execNext();
+            onSucceeded();
         }
 
         private void release() {

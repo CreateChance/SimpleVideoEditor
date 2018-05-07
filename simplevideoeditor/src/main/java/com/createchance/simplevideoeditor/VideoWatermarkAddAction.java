@@ -10,6 +10,7 @@ import android.media.MediaMuxer;
 import android.util.Log;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -23,8 +24,6 @@ public class VideoWatermarkAddAction extends AbstractAction {
 
     private static final String TAG = "VideoWatermarkAddAction";
 
-    private File mInputFile;
-    private File mOutputFile;
     private long mFromMs;
     private long mDurationMs;
     private Bitmap mWatermark;
@@ -32,7 +31,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
     private int mYPos;
 
     private VideoWatermarkAddAction() {
-
+        super(Constants.ACTION_ADD_WATER_MARK);
     }
 
     public File getInputFile() {
@@ -64,14 +63,31 @@ public class VideoWatermarkAddAction extends AbstractAction {
     }
 
     @Override
-    public void start() {
-        onStarted(Constants.STAGE_WATER_MARK_ADD);
+    public void start(File inputFile) {
+        super.start(inputFile);
+        onStarted();
         if (checkRational()) {
-            EditParamsMap.saveParams(EditParamsMap.KEY_VIDEO_WATER_MARK_ADD_ACTION, this);
-            WatermarkAddWorker watermarkAddWorker = new WatermarkAddWorker();
-            WorkRunner.addTaskToBackground(watermarkAddWorker);
+            VideoClipper clipper = new VideoClipper();
+            clipper.setInputVideoPath(mInputFile.getAbsolutePath());
+            clipper.setOutputVideoPath(mOutputFile.getAbsolutePath());
+            clipper.setOnVideoCutFinishListener(new VideoClipper.OnVideoCutFinishListener() {
+                @Override
+                public void onFinish() {
+                    Log.d(TAG, "onFinish: ");
+                    onSucceeded();
+                }
+            });
+            try {
+                clipper.clipVideo(0, 15 * 1000 * 1000);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+//            EditParamsMap.saveParams(EditParamsMap.KEY_VIDEO_WATER_MARK_ADD_ACTION, this);
+//            WatermarkAddWorker watermarkAddWorker = new WatermarkAddWorker();
+//            WorkRunner.addTaskToBackground(watermarkAddWorker);
         } else {
-            onFailed(Constants.STAGE_WATER_MARK_ADD);
+            onFailed();
             throw new IllegalArgumentException("Params error.");
         }
     }
@@ -82,8 +98,10 @@ public class VideoWatermarkAddAction extends AbstractAction {
         this.mWatermark.recycle();
     }
 
-    private boolean checkRational() {
-        return mInputFile != null &&
+    @Override
+    protected boolean checkRational() {
+        return super.checkRational() &&
+                mInputFile != null &&
                 mInputFile.exists() &&
                 mInputFile.isFile() &&
                 mOutputFile != null &&
@@ -96,19 +114,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
     public static class Builder {
         private VideoWatermarkAddAction watermarkAddAction = new VideoWatermarkAddAction();
 
-        public Builder input(File input) {
-            watermarkAddAction.mInputFile = input;
-
-            return this;
-        }
-
-        public Builder output(File output) {
-            watermarkAddAction.mOutputFile = output;
-
-            return this;
-        }
-
-        public Builder addWatermark(Bitmap watermark) {
+        public Builder watermark(Bitmap watermark) {
             watermarkAddAction.mWatermark = watermark;
 
             return this;
@@ -341,8 +347,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
                 }
             }
 
-            onSucceeded(Constants.STAGE_WATER_MARK_ADD);
-            execNext();
+            onSucceeded();
         }
 
         private void release() {

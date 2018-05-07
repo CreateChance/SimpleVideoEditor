@@ -1,5 +1,7 @@
 package com.createchance.simplevideoeditor;
 
+import java.io.File;
+
 /**
  * 音视频编辑抽象类，所有的编辑操作都是这个类的子类
  *
@@ -11,42 +13,68 @@ abstract class AbstractAction {
 
     private AbstractAction mSuccessNext;
 
-    abstract void start();
+    private final String mActionName;
+
+    protected File mInputFile;
+    protected File mOutputFile;
+
+    AbstractAction(String actionName) {
+        this.mActionName = actionName;
+    }
+
+    boolean checkRational() {
+        return mInputFile != null &&
+                mInputFile.exists() &&
+                mInputFile.isFile();
+    }
+
+    /**
+     * start this action.
+     */
+    void start(File inputFile) {
+        this.mInputFile = inputFile;
+        this.mOutputFile = genOutputFile();
+    }
 
     void release() {
+        if (mOutputFile != null && mOutputFile.exists()) {
+            mOutputFile.delete();
+        }
     }
 
     final void successNext(AbstractAction action) {
         mSuccessNext = action;
     }
 
-    protected final void execNext() {
+    private void execNext() {
+        // Our output file is the input of next action.
         if (mSuccessNext != null) {
-            mSuccessNext.start();
+            mSuccessNext.start(mOutputFile);
+        } else {
+            // We are the next action, rename our output to dest file.
+            // TODO: What if renameTo return false??
+            mOutputFile.renameTo(VideoEditorManager.getManager().getOutputFile());
         }
     }
 
-    protected final void onStarted(int stage) {
-        if (VideoEditorManager.getManager().getCallback() != null) {
-            VideoEditorManager.getManager().getCallback().onStart(stage);
-        }
+    protected final void onStarted() {
+        VideoEditorManager.getManager().onStart(mActionName);
     }
 
-    protected final void onProgress(int stage, float progress) {
-        if (VideoEditorManager.getManager().getCallback() != null) {
-            VideoEditorManager.getManager().getCallback().onProgress(stage, progress);
-        }
+    protected final void onProgress(float progress) {
+        VideoEditorManager.getManager().onProgress(mActionName, progress);
     }
 
-    protected final void onSucceeded(int stage) {
-        if (VideoEditorManager.getManager().getCallback() != null) {
-            VideoEditorManager.getManager().getCallback().onSucceeded(stage);
-        }
+    protected final void onSucceeded() {
+        execNext();
+        VideoEditorManager.getManager().onSucceed(mActionName);
     }
 
-    protected final void onFailed(int stage) {
-        if (VideoEditorManager.getManager().getCallback() != null) {
-            VideoEditorManager.getManager().getCallback().onFialed(stage);
-        }
+    protected final void onFailed() {
+        VideoEditorManager.getManager().onFailed(mActionName);
+    }
+
+    private File genOutputFile() {
+        return new File(VideoEditorManager.getManager().getBaseWorkFolder(), mActionName + ".tmp");
     }
 }

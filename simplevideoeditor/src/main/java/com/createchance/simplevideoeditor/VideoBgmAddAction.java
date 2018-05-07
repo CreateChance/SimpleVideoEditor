@@ -33,8 +33,6 @@ public class VideoBgmAddAction extends AbstractAction {
     public static final int EVENT_ENCODE_DONE = 202;
     public static final int EVENT_ENCODE_FAILED = 203;
 
-    private File mInputFile;
-    private File mOutFile;
     private File mBgmFile;
     private long mVideoStartPosMs;
     private long mVideoDurationMs;
@@ -43,47 +41,23 @@ public class VideoBgmAddAction extends AbstractAction {
     private boolean mOverride = true;
 
     private VideoBgmAddAction() {
-
+        super(Constants.ACTION_ADD_BGM);
     }
 
-    private boolean checkRational() {
-        if (mInputFile == null) {
-            return false;
-        }
+    @Override
+    protected boolean checkRational() {
+        return super.checkRational() &&
+                mInputFile != null &&
+                mBgmFile != null &&
+                mVideoDurationMs >= 0 &&
+                mVideoStartPosMs >= 0 &&
+                mBgmStartPosMs >= 0 &&
+                mBgmDurationMs >= 0;
 
-        if (mOutFile == null) {
-            return false;
-        }
-
-        if (mBgmFile == null) {
-            return false;
-        }
-
-        if (mVideoDurationMs < 0) {
-            return false;
-        }
-
-        if (mVideoStartPosMs < 0) {
-            return false;
-        }
-
-        if (mBgmStartPosMs < 0) {
-            return false;
-        }
-
-        if (mBgmDurationMs < 0) {
-            return false;
-        }
-
-        return true;
     }
 
     public File getInputFile() {
         return mInputFile;
-    }
-
-    public File getOutFile() {
-        return mOutFile;
     }
 
     public File getBgmFile() {
@@ -111,8 +85,9 @@ public class VideoBgmAddAction extends AbstractAction {
     }
 
     @Override
-    public void start() {
-        onStarted(Constants.STAGE_BGM_ADD);
+    public void start(File inputFile) {
+        super.start(inputFile);
+        onStarted();
         if (checkRational()) {
             try {
                 String bgmMime = getBgmMime();
@@ -131,7 +106,7 @@ public class VideoBgmAddAction extends AbstractAction {
             }
         } else {
             Logger.e(TAG, "Add bgm start failed, params error.");
-            onFailed(Constants.STAGE_BGM_ADD);
+            onFailed();
         }
     }
 
@@ -142,23 +117,11 @@ public class VideoBgmAddAction extends AbstractAction {
 
     private void addMpegBgm() {
         AudioTransCodeAction audioTransCodeAction = new AudioTransCodeAction.Builder()
-                .transCode(mBgmFile)
-                .to(new File(mOutFile.getParent(), "aactmp.aac"))
                 .from(mBgmStartPosMs)
                 .duration(mBgmDurationMs)
-                .targetFormat(AudioTransCodeAction.FORMAT.AAC)
                 .build();
-        VideoBgmAddAction videoBgmAddAction = new VideoBgmAddAction();
-        videoBgmAddAction.mInputFile = mInputFile;
-        videoBgmAddAction.mOutFile = mOutFile;
-        videoBgmAddAction.mBgmFile = new File(mOutFile.getParent(), "aactmp.aac");
-        videoBgmAddAction.mVideoStartPosMs = mVideoStartPosMs;
-        videoBgmAddAction.mVideoDurationMs = mVideoDurationMs;
-        videoBgmAddAction.mBgmStartPosMs = mBgmStartPosMs;
-        videoBgmAddAction.mBgmDurationMs = mBgmDurationMs;
-        videoBgmAddAction.mOverride = mOverride;
-        audioTransCodeAction.successNext(videoBgmAddAction);
-        audioTransCodeAction.start();
+        audioTransCodeAction.successNext(this);
+        audioTransCodeAction.start(mBgmFile);
     }
 
     private String getBgmMime() throws IOException {
@@ -180,13 +143,7 @@ public class VideoBgmAddAction extends AbstractAction {
     public static class Builder {
         private VideoBgmAddAction bgmAddAction = new VideoBgmAddAction();
 
-        public Builder edit(File video) {
-            bgmAddAction.mInputFile = video;
-
-            return this;
-        }
-
-        public Builder withBgm(File bgmFile) {
+        public Builder bgmFile(File bgmFile) {
             bgmAddAction.mBgmFile = bgmFile;
 
             return this;
@@ -222,12 +179,6 @@ public class VideoBgmAddAction extends AbstractAction {
             return this;
         }
 
-        public Builder saveAs(File output) {
-            bgmAddAction.mOutFile = output;
-
-            return this;
-        }
-
         public VideoBgmAddAction build() {
             return bgmAddAction;
         }
@@ -235,7 +186,6 @@ public class VideoBgmAddAction extends AbstractAction {
 
     private class AacBgmAddWorker implements Runnable {
         File bgmFile;
-        boolean deleteAfterUse;
         MediaMuxer mediaMuxer;
         MediaExtractor sourceExtractor;
         MediaExtractor bgmAudioExtractor;
@@ -254,7 +204,6 @@ public class VideoBgmAddAction extends AbstractAction {
 
         public AacBgmAddWorker(File bgmFile, boolean deleteAfterUse) {
             this.bgmFile = bgmFile;
-            this.deleteAfterUse = deleteAfterUse;
         }
 
         @Override
@@ -266,18 +215,15 @@ public class VideoBgmAddAction extends AbstractAction {
                 e.printStackTrace();
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
-                onFailed(Constants.STAGE_BGM_ADD);
+                onFailed();
             } finally {
                 release();
-                if (deleteAfterUse) {
-                    bgmFile.delete();
-                }
             }
 
         }
 
         private void prepare() throws IOException {
-            mediaMuxer = new MediaMuxer(mOutFile.getAbsolutePath(),
+            mediaMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(),
                     MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
 
             sourceExtractor = new MediaExtractor();
@@ -373,8 +319,7 @@ public class VideoBgmAddAction extends AbstractAction {
             }
 
             Log.d(TAG, "addBgm done!");
-            onSucceeded(Constants.STAGE_BGM_ADD);
-            execNext();
+            onSucceeded();
         }
 
         private void release() {

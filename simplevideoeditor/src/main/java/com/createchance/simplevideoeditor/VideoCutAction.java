@@ -21,8 +21,6 @@ public class VideoCutAction extends AbstractAction {
 
     private static final String TAG = "VideoCutAction";
 
-    private File mInputFile;
-    private File mOutputFile;
     private long mCutStartPosMs;
     private long mCutDurationMs;
 
@@ -33,28 +31,14 @@ public class VideoCutAction extends AbstractAction {
     private CutWorker mCutWorker;
 
     private VideoCutAction() {
+        super(Constants.ACTION_CUT_VIDEO);
 
-    }
-
-    public File getInputFile() {
-        return mInputFile;
-    }
-
-    public File getOutputFile() {
-        return mOutputFile;
-    }
-
-    public long getCutStartPosMs() {
-        return mCutStartPosMs;
-    }
-
-    public long getCutDurationMs() {
-        return mCutDurationMs;
     }
 
     @Override
-    public void start() {
-        onStarted(Constants.STAGE_VIDEO_CUT);
+    protected void start(File inputFile) {
+        super.start(inputFile);
+        onStarted();
 
         mCutWorker = new CutWorker();
         WorkRunner.addTaskToBackground(mCutWorker);
@@ -62,12 +46,6 @@ public class VideoCutAction extends AbstractAction {
 
     public static class Builder {
         private VideoCutAction cutAction = new VideoCutAction();
-
-        public Builder cut(File input) {
-            cutAction.mInputFile = input;
-
-            return this;
-        }
 
         public Builder from(long startMs) {
             cutAction.mCutStartPosMs = startMs;
@@ -77,12 +55,6 @@ public class VideoCutAction extends AbstractAction {
 
         public Builder duration(long durationMs) {
             cutAction.mCutDurationMs = durationMs;
-
-            return this;
-        }
-
-        public Builder saveAs(File output) {
-            cutAction.mOutputFile = output;
 
             return this;
         }
@@ -98,14 +70,11 @@ public class VideoCutAction extends AbstractAction {
         public void run() {
             try {
                 prepare();
-
                 cut();
             } catch (IOException e) {
                 // delete output file.
-                mOutputFile.delete();
                 e.printStackTrace();
-
-                onFailed(Constants.STAGE_VIDEO_CUT);
+                onFailed();
             } finally {
                 release();
             }
@@ -276,8 +245,7 @@ public class VideoCutAction extends AbstractAction {
 
             Log.d(TAG, "Cut file :" + mInputFile + " done!");
 
-            onSucceeded(Constants.STAGE_VIDEO_CUT);
-            execNext();
+            onSucceeded();
         }
 
         private void release() {

@@ -2,6 +2,7 @@ package com.createchance.simplevideoeditor;
 
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -42,29 +43,68 @@ public class VideoEditorManager {
         return mContext;
     }
 
-    public synchronized Editor edit(File videoFile, VideoEditCallback callback) {
+    public synchronized Editor edit(File videoFile) {
         if (mCurrentEditor != null) {
             Logger.e(TAG, "One edit is on going, try again later.");
             return null;
         }
-        mCurrentEditor = new Editor(videoFile, callback);
+        mCurrentEditor = new Editor(videoFile);
         return mCurrentEditor;
     }
 
-    VideoEditCallback getCallback() {
-        return mCurrentEditor.mCallback;
+    File getBaseWorkFolder() {
+        return mCurrentEditor == null ?
+                null : mCurrentEditor.outputFile == null ?
+                null : mCurrentEditor.outputFile.getParentFile();
+    }
+
+    File getOutputFile() {
+        return mCurrentEditor == null ? null : mCurrentEditor.outputFile;
+    }
+
+    void onStart(String action) {
+        if (mCurrentEditor.mCallback != null) {
+            mCurrentEditor.mCallback.onStart(action);
+        }
+    }
+
+    void onProgress(String action, float progress) {
+        if (mCurrentEditor.mCallback != null) {
+            mCurrentEditor.mCallback.onProgress(action, progress);
+        }
+    }
+
+    void onSucceed(String action) {
+        if (mCurrentEditor.mCallback != null) {
+            mCurrentEditor.mCallback.onSucceeded(action);
+        }
+
+        // clean all the tmp files.
+        for (AbstractAction act : mCurrentEditor.actionList) {
+            act.release();
+        }
+    }
+
+    void onFailed(String action) {
+        if (mCurrentEditor.mCallback != null) {
+            mCurrentEditor.mCallback.onFailed(action);
+        }
+
+        // clean all the tmp files.
+        for (AbstractAction act : mCurrentEditor.actionList) {
+            act.release();
+        }
     }
 
     public static class Editor {
         private File inputFile;
-        private File ouputFile;
+        private File outputFile;
         private List<AbstractAction> actionList = new ArrayList<>();
 
         VideoEditCallback mCallback;
 
-        private Editor(File input, VideoEditCallback callback) {
+        private Editor(File input) {
             this.inputFile = input;
-            this.mCallback = callback;
         }
 
         public Editor withAction(AbstractAction action) {
@@ -76,12 +116,12 @@ public class VideoEditorManager {
         }
 
         public Editor saveAs(File outputFile) {
-            this.ouputFile = outputFile;
+            this.outputFile = outputFile;
 
             return this;
         }
 
-        public void commit() {
+        public void commit(VideoEditCallback callback) {
             // check if input file is rational.
             if (inputFile == null ||
                     !inputFile.exists() ||
@@ -93,15 +133,11 @@ public class VideoEditorManager {
                 return;
             }
 
-            // edit input video file now.
-            // parse input video info before we real start.
-            VideoInfoParseAction videoInfoParseAction = new VideoInfoParseAction(inputFile);
-            videoInfoParseAction.successNext(actionList.get(0));
-            int index = 0;
-            while (index < actionList.size() - 1) {
-                actionList.get(index++).successNext(actionList.get(index++));
-            }
-            videoInfoParseAction.start();
+            mCallback = callback;
+
+            Log.d(TAG, "commit: " + outputFile);
+            // start from the first one.
+            actionList.get(0).start(inputFile);
         }
     }
 }
