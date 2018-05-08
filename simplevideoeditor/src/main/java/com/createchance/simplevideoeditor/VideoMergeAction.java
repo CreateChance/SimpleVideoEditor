@@ -23,7 +23,6 @@ public class VideoMergeAction extends AbstractAction {
     private static final String TAG = "VideoMergeAction";
 
     private List<File> mMergeFiles = new ArrayList<>();
-    private File mOutputFile;
     private MergeWorker mMergeWorker;
 
     private VideoMergeAction() {
