@@ -22,7 +22,7 @@ import java.util.List;
 public class VideoMergeAction extends AbstractAction {
     private static final String TAG = "VideoMergeAction";
 
-    private List<File> mInputFiles = new ArrayList<>();
+    private List<File> mMergeFiles = new ArrayList<>();
     private File mOutputFile;
     private MergeWorker mMergeWorker;
 
@@ -31,11 +31,7 @@ public class VideoMergeAction extends AbstractAction {
     }
 
     public List<File> getInputFiles() {
-        return mInputFiles;
-    }
-
-    public File getOutputFile() {
-        return mOutputFile;
+        return mMergeFiles;
     }
 
     @Override
@@ -51,13 +47,7 @@ public class VideoMergeAction extends AbstractAction {
         private VideoMergeAction mergeAction = new VideoMergeAction();
 
         public Builder merge(File video) {
-            mergeAction.mInputFiles.add(video);
-
-            return this;
-        }
-
-        public Builder saveAs(File video) {
-            mergeAction.mOutputFile = video;
+            mergeAction.mMergeFiles.add(video);
 
             return this;
         }
@@ -97,7 +87,7 @@ public class VideoMergeAction extends AbstractAction {
         private void merge() throws IOException {
             // 首先找到视频列表中的视频媒体信息
             // TODO: 目前是匹配第一个找到的媒体信息
-            for (File video : mInputFiles) {
+            for (File video : mMergeFiles) {
                 MediaExtractor mediaExtractor = new MediaExtractor();
                 mediaExtractor.setDataSource(video.getAbsolutePath());
                 for (int i = 0; i < mediaExtractor.getTrackCount(); i++) {
@@ -129,7 +119,7 @@ public class VideoMergeAction extends AbstractAction {
 
             mediaMuxer.start();
 
-            for (File video : mInputFiles) {
+            for (File video : mMergeFiles) {
                 MediaExtractor videoExtractor = new MediaExtractor();
                 MediaExtractor audioExtractor = new MediaExtractor();
                 videoExtractor.setDataSource(video.getAbsolutePath());

@@ -28,6 +28,10 @@ abstract class AbstractAction {
                 mInputFile.isFile();
     }
 
+    void makeRational() {
+
+    }
+
     /**
      * start this action.
      */
@@ -72,6 +76,10 @@ abstract class AbstractAction {
 
     protected final void onFailed() {
         VideoEditorManager.getManager().onFailed(mActionName);
+    }
+
+    protected final File getBaseWorkFolder() {
+        return VideoEditorManager.getManager().getBaseWorkFolder();
     }
 
     private File genOutputFile() {

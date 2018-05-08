@@ -28,57 +28,50 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @date 25/03/2018
  */
 
-class AudioTransCodeAction extends AbstractAction {
+class AudioTransCoder {
 
-    private static final String TAG = "AudioTransCodeAction";
+    private static final String TAG = "AudioTransCoder";
 
     private BlockingQueue<RawBuffer> mRawQueue = new LinkedBlockingQueue<>(10);
 
+    private File mInputFile;
+    private File mOutputFile;
+    private long mStartPosMs;
+    private long mDurationMs;
     private MediaCodec decoder, encoder;
 
-    @Override
-    void start(File inputFile) {
-        super.start(inputFile);
-        onStarted();
+    private Callback mCallback;
+
+    void start(Callback callback) {
+        Logger.d(TAG, "Audio trans code started, start pos: " + mStartPosMs + ", duration: " + mDurationMs);
+        mCallback = callback;
         if (checkRational()) {
             DecodeInputWorker decodeWorker = new DecodeInputWorker();
             WorkRunner.addTaskToBackground(decodeWorker);
+        } else {
+            if (mCallback != null) {
+                mCallback.onFailed();
+            }
         }
     }
 
-    public enum FORMAT {
-        NONE,
-        MP3,
-        AAC
-    }
-
-    private long mStartPosMs;
-    private long mDurationMs;
-
-    private AudioTransCodeAction() {
-        super(Constants.ACTION_AUDIO_TRANS_CODE);
-    }
-
-    public File getInputFile() {
-        return mInputFile;
-    }
-
-    public File getOutputFile() {
-        return mOutputFile;
-    }
-
-    @Override
-    protected boolean checkRational() {
-        return super.checkRational() &&
-                mInputFile != null &&
-                mOutputFile != null &&
+    private boolean checkRational() {
+        return mInputFile != null &&
+                mInputFile.exists() &&
+                mInputFile.isFile() &&
                 mStartPosMs >= 0 &&
                 mDurationMs >= 0;
 
     }
 
     public static class Builder {
-        private AudioTransCodeAction transCodeAction = new AudioTransCodeAction();
+        private AudioTransCoder transCodeAction = new AudioTransCoder();
+
+        public Builder transcode(File input) {
+            transCodeAction.mInputFile = input;
+
+            return this;
+        }
 
         public Builder from(long fromMs) {
             transCodeAction.mStartPosMs = fromMs;
@@ -92,7 +85,13 @@ class AudioTransCodeAction extends AbstractAction {
             return this;
         }
 
-        public AudioTransCodeAction build() {
+        public Builder saveAs(File output) {
+            transCodeAction.mOutputFile = output;
+
+            return this;
+        }
+
+        public AudioTransCoder build() {
             return transCodeAction;
         }
     }
@@ -183,6 +182,7 @@ class AudioTransCodeAction extends AbstractAction {
                             sampleSize = -1;
                         }
                         if (sampleSize <= 0) {
+                            Logger.d(TAG, "Decode input reach eos.");
                             decoder.queueInputBuffer(
                                     inIndex,
                                     0,
@@ -206,7 +206,7 @@ class AudioTransCodeAction extends AbstractAction {
 
             }
 
-            Log.d(TAG, "decode done!");
+            Logger.d(TAG, "decode done!");
         }
 
         @TargetApi(21)
@@ -224,6 +224,7 @@ class AudioTransCodeAction extends AbstractAction {
                     }
 
                     if (sampleSize <= 0) {
+                        Logger.d(TAG, "Decode input reach eos.");
                         decoder.queueInputBuffer(
                                 inputBufferId,
                                 0,
@@ -260,11 +261,14 @@ class AudioTransCodeAction extends AbstractAction {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                if (mCallback != null) {
+                    mCallback.onFailed();
+                }
             } finally {
                 release();
             }
 
-            Log.d(TAG, "Decode output worker done.");
+            Logger.d(TAG, "Decode output worker done.");
         }
 
         @TargetApi(20)
@@ -302,7 +306,7 @@ class AudioTransCodeAction extends AbstractAction {
                         break;
                 }
                 if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                    Log.d(TAG, "decode20, reach audio eos.");
+                    Log.d(TAG, "Decode output reach eos.");
                     break;
                 }
             }
@@ -342,7 +346,7 @@ class AudioTransCodeAction extends AbstractAction {
                         break;
                 }
                 if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                    Log.d(TAG, "decode20, reach audio eos.");
+                    Log.d(TAG, "Decode output reach eos.");
                     break;
                 }
             }
@@ -383,6 +387,9 @@ class AudioTransCodeAction extends AbstractAction {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                if (mCallback != null) {
+                    mCallback.onFailed();
+                }
             } finally {
                 release();
             }
@@ -411,6 +418,7 @@ class AudioTransCodeAction extends AbstractAction {
                     if (inputBufferId >= 0) {
                         RawBuffer rawBuffer = mRawQueue.take();
                         if (rawBuffer.isLast) {
+                            Logger.d(TAG, "Encode input reach eos.");
                             decodeDone = true;
                             encoder.queueInputBuffer(
                                     inputBufferId,
@@ -449,6 +457,7 @@ class AudioTransCodeAction extends AbstractAction {
                     if (inputBufferId >= 0) {
                         RawBuffer rawBuffer = mRawQueue.take();
                         if (rawBuffer.isLast) {
+                            Logger.d(TAG, "Encode input reach eos.");
                             decodeDone = true;
                             encoder.queueInputBuffer(
                                     inputBufferId,
@@ -494,8 +503,14 @@ class AudioTransCodeAction extends AbstractAction {
                 } else {
                     encodeOutput20();
                 }
+                if (mCallback != null) {
+                    mCallback.onSucceed(mOutputFile);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
+                if (mCallback != null) {
+                    mCallback.onFailed();
+                }
             } finally {
                 release();
             }
@@ -523,8 +538,7 @@ class AudioTransCodeAction extends AbstractAction {
                     encoder.releaseOutputBuffer(outIndex, false);
                     mOutput.write(outData);
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                        Log.d(TAG, "encode reach end of stream!");
-                        onSucceeded();
+                        Log.d(TAG, "Encode output reach eos.");
                         break;
                     }
                 }
@@ -547,8 +561,7 @@ class AudioTransCodeAction extends AbstractAction {
                     encoder.releaseOutputBuffer(outIndex, false);
                     mOutput.write(outData);
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                        Log.d(TAG, "encode reach end of stream!");
-                        onSucceeded();
+                        Log.d(TAG, "Encode output reach eos.");
                         break;
                     }
                 }
@@ -613,5 +626,13 @@ class AudioTransCodeAction extends AbstractAction {
                     ", isLast=" + isLast +
                     '}';
         }
+    }
+
+    interface Callback {
+        void onProgress(float progress);
+
+        void onSucceed(File output);
+
+        void onFailed();
     }
 }

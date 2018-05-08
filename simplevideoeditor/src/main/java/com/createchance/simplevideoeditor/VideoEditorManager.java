@@ -2,7 +2,6 @@ package com.createchance.simplevideoeditor;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -135,7 +134,14 @@ public class VideoEditorManager {
 
             mCallback = callback;
 
-            Log.d(TAG, "commit: " + outputFile);
+            for (int i = 0; i < actionList.size() - 1; i++) {
+                actionList.get(i).successNext(actionList.get(i + 1));
+            }
+
+            Logger.d(TAG, "Start edit, input file: " + inputFile
+                    + ", output file: " + outputFile
+                    + ", action list: " + actionList);
+
             // start from the first one.
             actionList.get(0).start(inputFile);
         }
