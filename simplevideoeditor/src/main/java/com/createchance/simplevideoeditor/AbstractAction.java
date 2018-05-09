@@ -22,16 +22,6 @@ abstract class AbstractAction {
         this.mActionName = actionName;
     }
 
-    boolean checkRational() {
-        return mInputFile != null &&
-                mInputFile.exists() &&
-                mInputFile.isFile();
-    }
-
-    void makeRational() {
-
-    }
-
     /**
      * start this action.
      */

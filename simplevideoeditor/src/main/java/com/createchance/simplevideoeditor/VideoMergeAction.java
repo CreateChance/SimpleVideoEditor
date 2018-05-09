@@ -68,15 +68,28 @@ public class VideoMergeAction extends AbstractAction {
         @Override
         public void run() {
             try {
-                prepare();
-
-                merge();
+                if (checkRational()) {
+                    prepare();
+                    merge();
+                } else {
+                    Logger.e(TAG, "Action params error.");
+                    onFailed();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 onFailed();
             } finally {
                 release();
             }
+        }
+
+        private boolean checkRational() {
+            return mInputFile != null &&
+                    mInputFile.exists() &&
+                    mInputFile.isFile() &&
+                    mOutputFile != null &&
+                    mMergeFiles.size() > 0;
+
         }
 
         private void prepare() throws IOException {

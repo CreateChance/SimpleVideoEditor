@@ -35,42 +35,6 @@ public class VideoBgmAddAction extends AbstractAction {
         super(Constants.ACTION_ADD_BGM);
     }
 
-    @Override
-    protected boolean checkRational() {
-        return super.checkRational() &&
-                mInputFile != null &&
-                mBgmFile != null &&
-                mVideoDurationMs >= 0 &&
-                mVideoStartPosMs >= 0 &&
-                mBgmStartPosMs >= 0 &&
-                mBgmDurationMs >= 0;
-
-    }
-
-    @Override
-    void makeRational() {
-        super.makeRational();
-
-        // get duration of video.
-        MediaMetadataRetriever videoRetriever = new MediaMetadataRetriever();
-        videoRetriever.setDataSource(mInputFile.getAbsolutePath());
-        long videoDuration = Long.valueOf(videoRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-        videoRetriever.release();
-
-        // get duration of bgm file.
-        MediaMetadataRetriever bgmRetriever = new MediaMetadataRetriever();
-        bgmRetriever.setDataSource(mBgmFile.getAbsolutePath());
-        long bgmDuration = Long.valueOf(bgmRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-
-        if (mVideoDurationMs == 0) {
-            mVideoDurationMs = videoDuration > bgmDuration ? bgmDuration : videoDuration;
-        }
-
-        if (mBgmDurationMs == 0) {
-            mBgmDurationMs = mVideoDurationMs;
-        }
-    }
-
     public File getBgmFile() {
         return mBgmFile;
     }
@@ -99,27 +63,21 @@ public class VideoBgmAddAction extends AbstractAction {
     public void start(File inputFile) {
         super.start(inputFile);
         onStarted();
-        if (checkRational()) {
-            makeRational();
-            try {
-                String bgmMime = getBgmMime();
-                Logger.d(TAG, "bgm mime type: " + bgmMime);
-                switch (bgmMime) {
-                    case MediaFormat.MIMETYPE_AUDIO_AAC:
-                        addAacBgm(mBgmFile, false);
-                        break;
-                    case MediaFormat.MIMETYPE_AUDIO_MPEG:
-                        addMpegBgm();
-                        break;
-                    default:
-                        break;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                onFailed();
+        try {
+            String bgmMime = getBgmMime();
+            Logger.d(TAG, "bgm mime type: " + bgmMime);
+            switch (bgmMime) {
+                case MediaFormat.MIMETYPE_AUDIO_AAC:
+                    addAacBgm(mBgmFile, false);
+                    break;
+                case MediaFormat.MIMETYPE_AUDIO_MPEG:
+                    addMpegBgm();
+                    break;
+                default:
+                    break;
             }
-        } else {
-            Logger.e(TAG, "Add bgm start failed, params error.");
+        } catch (IOException e) {
+            e.printStackTrace();
             onFailed();
         }
     }
@@ -244,9 +202,14 @@ public class VideoBgmAddAction extends AbstractAction {
         @Override
         public void run() {
             try {
-                prepare();
-                addBgm();
-                onSucceeded();
+                if (checkRational()) {
+                    prepare();
+                    addBgm();
+                    onSucceeded();
+                } else {
+                    Logger.e(TAG, "Action params error.");
+                    onFailed();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 onFailed();
@@ -256,7 +219,66 @@ public class VideoBgmAddAction extends AbstractAction {
                     bgmFile.delete();
                 }
             }
+        }
 
+        private boolean checkRational() {
+            if (mInputFile != null &&
+                    mInputFile.exists() &&
+                    mInputFile.isFile() &&
+                    mOutputFile != null &&
+                    mBgmFile != null &&
+                    mBgmFile.exists() &&
+                    mBgmFile.isFile() &&
+                    mVideoDurationMs >= 0 &&
+                    mVideoStartPosMs >= 0 &&
+                    mBgmStartPosMs >= 0 &&
+                    mBgmDurationMs >= 0) {
+
+                // get duration of video.
+                MediaMetadataRetriever videoRetriever = new MediaMetadataRetriever();
+                videoRetriever.setDataSource(mInputFile.getAbsolutePath());
+                long videoDuration = Long.valueOf(videoRetriever.
+                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+                videoRetriever.release();
+
+                // get duration of bgm file.
+                MediaMetadataRetriever bgmRetriever = new MediaMetadataRetriever();
+                bgmRetriever.setDataSource(mBgmFile.getAbsolutePath());
+                long bgmDuration = Long.valueOf(bgmRetriever.
+                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+                bgmRetriever.release();
+
+                if ((mVideoStartPosMs + mVideoDurationMs) > videoDuration) {
+                    Logger.e(TAG, "Video selected section is out of duration!");
+                    return false;
+                }
+
+                if ((mBgmStartPosMs + mBgmDurationMs) > bgmDuration) {
+                    Logger.e(TAG, "Bgm selected section is out of duration!");
+                    return false;
+                }
+
+                long remainVideoDuration = videoDuration - mVideoStartPosMs;
+                long remainBgmDuration = bgmDuration - mBgmStartPosMs;
+                if (mVideoDurationMs == 0) {
+                    mVideoDurationMs = remainVideoDuration;
+                    Logger.d(TAG, "Video duration is 0, adjust it to: " + mVideoDurationMs);
+                }
+                if (mBgmDurationMs == 0) {
+                    mBgmDurationMs = remainVideoDuration > remainBgmDuration ?
+                            remainBgmDuration : remainVideoDuration;
+                    Logger.d(TAG, "Bgm duration is 0, adjust it to: " + mBgmDurationMs);
+                }
+
+                if (mOutputFile.exists()) {
+                    Logger.w(TAG, "WARNING: Output file: " + mOutputFile
+                            + " already exists, we will override it!");
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         private void prepare() throws IOException {
@@ -376,9 +398,9 @@ public class VideoBgmAddAction extends AbstractAction {
                             bufferInfo.size = bgmSampleSize;
                             bufferInfo.flags = bgmAudioExtractor.getSampleFlags();
                             bufferInfo.offset = 0;
-                            long sampleTime = mVideoStartPosMs * 1000 + bgmAudioExtractor.getSampleTime();
-                            bufferInfo.presentationTimeUs = sampleTime < (mVideoStartPosMs + mVideoDurationMs) * 1000 ?
-                                    sampleTime : (mVideoStartPosMs + mVideoDurationMs) * 1000;
+//                            long sampleTime = mVideoStartPosMs * 1000 + bgmAudioExtractor.getSampleTime();
+//                            bufferInfo.presentationTimeUs = sampleTime < (mVideoStartPosMs + mVideoDurationMs) * 1000 ?
+//                                    sampleTime : (mVideoStartPosMs + mVideoDurationMs) * 1000;
                             Logger.v(TAG, "Got bgm audio data, size: " + bufferInfo.size +
                                     ", presentation time: " + bufferInfo.presentationTimeUs);
 

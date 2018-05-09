@@ -66,49 +66,31 @@ public class VideoWatermarkAddAction extends AbstractAction {
     public void start(File inputFile) {
         super.start(inputFile);
         onStarted();
-        if (checkRational()) {
-            VideoClipper clipper = new VideoClipper();
-            clipper.setInputVideoPath(mInputFile.getAbsolutePath());
-            clipper.setOutputVideoPath(mOutputFile.getAbsolutePath());
-            clipper.setOnVideoCutFinishListener(new VideoClipper.OnVideoCutFinishListener() {
-                @Override
-                public void onFinish() {
-                    Log.d(TAG, "onFinish: ");
-                    onSucceeded();
-                }
-            });
-            try {
-                clipper.clipVideo(0, 15 * 1000 * 1000);
-            } catch (IOException e) {
-                e.printStackTrace();
+        VideoClipper clipper = new VideoClipper();
+        clipper.setInputVideoPath(mInputFile.getAbsolutePath());
+        clipper.setOutputVideoPath(mOutputFile.getAbsolutePath());
+        clipper.setOnVideoCutFinishListener(new VideoClipper.OnVideoCutFinishListener() {
+            @Override
+            public void onFinish() {
+                Log.d(TAG, "onFinish: ");
+                onSucceeded();
             }
+        });
+        try {
+            clipper.clipVideo(0, 15 * 1000 * 1000);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 //            EditParamsMap.saveParams(EditParamsMap.KEY_VIDEO_WATER_MARK_ADD_ACTION, this);
 //            WatermarkAddWorker watermarkAddWorker = new WatermarkAddWorker();
 //            WorkRunner.addTaskToBackground(watermarkAddWorker);
-        } else {
-            onFailed();
-            throw new IllegalArgumentException("Params error.");
-        }
     }
 
     @Override
     public void release() {
         super.release();
         this.mWatermark.recycle();
-    }
-
-    @Override
-    protected boolean checkRational() {
-        return super.checkRational() &&
-                mInputFile != null &&
-                mInputFile.exists() &&
-                mInputFile.isFile() &&
-                mOutputFile != null &&
-                mWatermark != null &&
-                !mWatermark.isRecycled() &&
-                mFromMs >= 0 &&
-                mDurationMs >= 0;
     }
 
     public static class Builder {
@@ -166,8 +148,13 @@ public class VideoWatermarkAddAction extends AbstractAction {
         @Override
         public void run() {
             try {
-                prepare();
-                addWatermark();
+                if (checkRational()) {
+                    prepare();
+                    addWatermark();
+                } else {
+                    Logger.e(TAG, "Action params error.");
+                    onFailed();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -175,6 +162,36 @@ public class VideoWatermarkAddAction extends AbstractAction {
             }
 
             Log.d(TAG, "Watermark add done.");
+        }
+
+        private boolean checkRational() {
+            if (mInputFile != null &&
+                    mInputFile.exists() &&
+                    mInputFile.isFile() &&
+                    mOutputFile != null &&
+                    mWatermark != null &&
+                    !mWatermark.isRecycled() &&
+                    mFromMs >= 0 &&
+                    mDurationMs >= 0) {
+                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                mediaMetadataRetriever.setDataSource(mInputFile.getAbsolutePath());
+                long duration = Long.valueOf(mediaMetadataRetriever.
+                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+                mediaMetadataRetriever.release();
+                if (mFromMs + mDurationMs > duration) {
+                    Logger.e(TAG, "Video selected section of out of duration!");
+                    return false;
+                }
+
+                if (mOutputFile.exists()) {
+                    Logger.w(TAG, "WARNING: Output file: " + mOutputFile
+                            + " already exists, we will override it!");
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         private void prepare() throws Exception {

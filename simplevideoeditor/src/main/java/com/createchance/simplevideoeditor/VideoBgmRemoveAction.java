@@ -3,6 +3,7 @@ package com.createchance.simplevideoeditor;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
 import android.util.Log;
 
@@ -26,7 +27,6 @@ public class VideoBgmRemoveAction extends AbstractAction {
 
     private MediaExtractor mMediaExtractor;
     private MediaMuxer mMediaMuxer;
-    private int mVideoTrackIndex = -1;
 
     private RemoveWorker mRemoveWorker;
 
@@ -34,46 +34,12 @@ public class VideoBgmRemoveAction extends AbstractAction {
         super(Constants.ACTION_REMOVE_BGM);
     }
 
-    public File getInputFile() {
-        return mInputFile;
-    }
-
-    public long getRemoveStartPos() {
-        return mRemoveStartPosMs;
-    }
-
-    public long getRemoveDuration() {
-        return mRemoveDurationMs;
-    }
-
     @Override
     protected void start(File inputFile) {
         super.start(inputFile);
         onStarted();
-        if (checkRational()) {
-            mRemoveWorker = new RemoveWorker();
-            WorkRunner.addTaskToBackground(mRemoveWorker);
-        } else {
-            Logger.e(TAG, "Remove bgm start failed, params error.");
-            onFailed();
-        }
-    }
-
-    @Override
-    protected boolean checkRational() {
-        if (mInputFile == null) {
-            return false;
-        }
-
-        if (mOutputFile == null) {
-            return false;
-        }
-
-        if (mRemoveStartPosMs < 0) {
-            return false;
-        }
-
-        return mRemoveDurationMs > 0;
+        mRemoveWorker = new RemoveWorker();
+        WorkRunner.addTaskToBackground(mRemoveWorker);
     }
 
     public static class Builder {
@@ -104,15 +70,47 @@ public class VideoBgmRemoveAction extends AbstractAction {
         @Override
         public void run() {
             try {
-                prepare();
-
-                removeBgm();
+                if (checkRational()) {
+                    prepare();
+                    removeBgm();
+                } else {
+                    Logger.e(TAG, "Action params error.");
+                    onFailed();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 onFailed();
             } finally {
                 release();
             }
+        }
+
+        private boolean checkRational() {
+            if (mInputFile != null &&
+                    mInputFile.exists() &&
+                    mInputFile.isFile() &&
+                    mOutputFile != null &&
+                    mRemoveStartPosMs >= 0 &&
+                    mRemoveDurationMs >= 0) {
+                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                mediaMetadataRetriever.setDataSource(mInputFile.getAbsolutePath());
+                long duration = Long.valueOf(mediaMetadataRetriever.
+                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+                mediaMetadataRetriever.release();
+                if (mRemoveStartPosMs + mRemoveDurationMs > duration) {
+                    Logger.e(TAG, "Video selected section of out of duration!");
+                    return false;
+                }
+
+                if (mOutputFile.exists()) {
+                    Logger.w(TAG, "WARNING: Output file: " + mOutputFile
+                            + " already exists, we will override it!");
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         private void prepare() throws IOException {

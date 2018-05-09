@@ -3,6 +3,7 @@ package com.createchance.simplevideoeditor;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
 import android.util.Log;
 
@@ -69,8 +70,13 @@ public class VideoCutAction extends AbstractAction {
         @Override
         public void run() {
             try {
-                prepare();
-                cut();
+                if (checkRational()) {
+                    prepare();
+                    cut();
+                } else {
+                    Logger.e(TAG, "Action params error.");
+                    onFailed();
+                }
             } catch (IOException e) {
                 // delete output file.
                 e.printStackTrace();
@@ -78,6 +84,34 @@ public class VideoCutAction extends AbstractAction {
             } finally {
                 release();
             }
+        }
+
+        private boolean checkRational() {
+            if (mInputFile != null &&
+                    mInputFile.exists() &&
+                    mInputFile.isFile() &&
+                    mOutputFile != null) {
+
+                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                mediaMetadataRetriever.setDataSource(mInputFile.getAbsolutePath());
+                long duration = Long.valueOf(mediaMetadataRetriever.
+                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+                mediaMetadataRetriever.release();
+
+                if (mCutStartPosMs + mCutDurationMs > duration) {
+                    Logger.e(TAG, "Video selected section is out of duration!");
+                    return false;
+                }
+
+                if (mOutputFile.exists()) {
+                    Logger.w(TAG, "WARNING: Output file: " + mOutputFile
+                            + " already exists, we will override it!");
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         private void prepare() throws IOException {
