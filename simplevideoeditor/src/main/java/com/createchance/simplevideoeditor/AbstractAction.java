@@ -40,17 +40,6 @@ abstract class AbstractAction {
         mSuccessNext = action;
     }
 
-    private void execNext() {
-        // Our output file is the input of next action.
-        if (mSuccessNext != null) {
-            mSuccessNext.start(mOutputFile);
-        } else {
-            // We are the next action, rename our output to dest file.
-            // TODO: What if renameTo return false??
-            mOutputFile.renameTo(VideoEditorManager.getManager().getOutputFile());
-        }
-    }
-
     protected final void onStarted() {
         VideoEditorManager.getManager().onStart(mActionName);
     }
@@ -60,8 +49,17 @@ abstract class AbstractAction {
     }
 
     protected final void onSucceeded() {
-        execNext();
-        VideoEditorManager.getManager().onSucceed(mActionName);
+        // Our output file is the input of next action.
+        if (mSuccessNext != null) {
+            VideoEditorManager.getManager().onSucceed(mActionName);
+            mSuccessNext.start(mOutputFile);
+        } else {
+            // We are the next action, rename our output to dest file.
+            // TODO: What if renameTo return false??
+            mOutputFile.renameTo(VideoEditorManager.getManager().getOutputFile());
+            VideoEditorManager.getManager().onSucceed(mActionName);
+            VideoEditorManager.getManager().onAllSucceed();
+        }
     }
 
     protected final void onFailed() {

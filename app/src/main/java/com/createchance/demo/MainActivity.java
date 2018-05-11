@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
                 .bgmFile(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
-                .videoFrom(3 * 1000)
+                .videoFrom(5 * 1000)
 //                .videoDuration(7 * 1000)
 //                .bgmFrom(5 * 1000)
                 .build();
@@ -74,8 +74,9 @@ public class MainActivity extends AppCompatActivity {
                 .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180404_104840.mp4"))
                 .build();
         VideoEditorManager.getManager()
-                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input1.mp4"))
+                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
                 .withAction(bgmAddAction)
+                .withAction(watermarkAddAction)
                 .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/output.mp4"))
                 .commit(new VideoEditCallback() {
                     @Override

@@ -77,21 +77,24 @@ public class VideoEditorManager {
         if (mCurrentEditor.mCallback != null) {
             mCurrentEditor.mCallback.onSucceeded(action);
         }
+    }
 
+    void onAllSucceed() {
         // clean all the tmp files.
         for (AbstractAction act : mCurrentEditor.actionList) {
             act.release();
         }
+        mCurrentEditor = null;
     }
 
     void onFailed(String action) {
-        if (mCurrentEditor.mCallback != null) {
-            mCurrentEditor.mCallback.onFailed(action);
-        }
-
         // clean all the tmp files.
         for (AbstractAction act : mCurrentEditor.actionList) {
             act.release();
+        }
+
+        if (mCurrentEditor.mCallback != null) {
+            mCurrentEditor.mCallback.onFailed(action);
         }
     }
 

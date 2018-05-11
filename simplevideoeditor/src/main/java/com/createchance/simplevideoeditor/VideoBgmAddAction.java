@@ -205,20 +205,22 @@ public class VideoBgmAddAction extends AbstractAction {
                 if (checkRational()) {
                     prepare();
                     addBgm();
-                    onSucceeded();
                 } else {
                     Logger.e(TAG, "Action params error.");
                     onFailed();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                onFailed();
-            } finally {
                 release();
-                if (deleteAfterUse) {
-                    bgmFile.delete();
-                }
+                onFailed();
+                return;
             }
+
+            release();
+            if (deleteAfterUse) {
+                bgmFile.delete();
+            }
+            onSucceeded();
         }
 
         private boolean checkRational() {
