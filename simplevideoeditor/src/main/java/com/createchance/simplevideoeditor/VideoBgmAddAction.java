@@ -103,7 +103,7 @@ public class VideoBgmAddAction extends AbstractAction {
                     @Override
                     public void onSucceed(File output) {
                         Logger.d(TAG, "Audio trans code done, add with aac file: " + output);
-                        addAacBgm(output, false);
+                        addAacBgm(output, true);
                     }
 
                     @Override
@@ -282,6 +282,7 @@ public class VideoBgmAddAction extends AbstractAction {
         }
 
         private void prepare() throws IOException {
+            MediaFormat audioFormat = null;
             mediaMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(),
                     MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
 
@@ -298,7 +299,7 @@ public class VideoBgmAddAction extends AbstractAction {
                 } else if (mime.startsWith("audio")) {
                     Logger.d(TAG, "Found source audio track , track id: " + i);
                     inAudioTrackId = i;
-                    outAudioTrackId = mediaMuxer.addTrack(mediaFormat);
+                    audioFormat = mediaFormat;
                     // create decoder and encoder by audio track of video file.
                     if (!mOverride) {
                         audioDecoder = MediaCodec.createDecoderByType(mime);
@@ -326,13 +327,23 @@ public class VideoBgmAddAction extends AbstractAction {
                 if (mediaFormat.getString(MediaFormat.KEY_MIME).startsWith("audio")) {
                     Logger.d(TAG, "Found bgm audio track, track id: " + i);
                     inBgmTrackId = i;
+                    if (audioFormat != null) {
+                        // select smaller sample rate format
+                        // TODO: this will cause audio deformation, should do resample on audio.
+                        audioFormat = audioFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE) >
+                                mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE) ?
+                                mediaFormat : audioFormat;
+                    } else {
+                        audioFormat = mediaFormat;
+                    }
                     break;
                 }
             }
 
-            if (inBgmTrackId == -1) {
+            if (audioFormat == null) {
                 throw new IllegalArgumentException("We do not find any audio track in bgm: " + bgmFile);
             } else {
+                outAudioTrackId = mediaMuxer.addTrack(audioFormat);
                 mediaMuxer.start();
             }
         }

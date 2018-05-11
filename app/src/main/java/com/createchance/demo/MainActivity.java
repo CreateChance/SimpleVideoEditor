@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
                 .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180404_104840.mp4"))
                 .build();
         VideoEditorManager.getManager()
-                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input.mp4"))
+                .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input1.mp4"))
                 .withAction(bgmAddAction)
                 .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/output.mp4"))
                 .commit(new VideoEditCallback() {
