@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         VideoEditorManager.getManager()
                 .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
-                .withAction(bgmAddAction)
+//                .withAction(bgmAddAction)
                 .withAction(watermarkAddAction)
                 .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/output.mp4"))
                 .commit(new VideoEditCallback() {

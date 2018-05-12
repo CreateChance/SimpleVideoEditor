@@ -10,7 +10,6 @@ import android.media.MediaMuxer;
 import android.util.Log;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -66,25 +65,9 @@ public class VideoWatermarkAddAction extends AbstractAction {
     public void start(File inputFile) {
         super.start(inputFile);
         onStarted();
-        VideoClipper clipper = new VideoClipper();
-        clipper.setInputVideoPath(mInputFile.getAbsolutePath());
-        clipper.setOutputVideoPath(mOutputFile.getAbsolutePath());
-        clipper.setOnVideoCutFinishListener(new VideoClipper.OnVideoCutFinishListener() {
-            @Override
-            public void onFinish() {
-                Log.d(TAG, "onFinish: ");
-                onSucceeded();
-            }
-        });
-        try {
-            clipper.clipVideo(0, 15 * 1000 * 1000);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-//            EditParamsMap.saveParams(EditParamsMap.KEY_VIDEO_WATER_MARK_ADD_ACTION, this);
-//            WatermarkAddWorker watermarkAddWorker = new WatermarkAddWorker();
-//            WorkRunner.addTaskToBackground(watermarkAddWorker);
+        WatermarkAddWorker watermarkAddWorker = new WatermarkAddWorker();
+        WorkRunner.addTaskToBackground(watermarkAddWorker);
     }
 
     @Override
@@ -136,7 +119,6 @@ public class VideoWatermarkAddAction extends AbstractAction {
         MediaCodec encoder;
         MediaExtractor mediaExtractor;
         MediaMuxer mediaMuxer;
-        boolean muxerStarted = false;
         int inputAudioTrackId = -1;
         int inputVideoTrackId = -1;
         int outputAudioTrackId = -1;
@@ -212,6 +194,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
                 MediaFormat mediaFormat = mediaExtractor.getTrackFormat(i);
                 String mime = mediaFormat.getString(MediaFormat.KEY_MIME);
                 if (mime.startsWith("video")) {
+                    Logger.d("GAOCHAO", "video format: " + mediaFormat);
                     inputVideoTrackId = i;
                     outputVideoTrackId = mediaMuxer.addTrack(mediaFormat);
                     videoFormat = mediaFormat;
@@ -228,7 +211,6 @@ public class VideoWatermarkAddAction extends AbstractAction {
 
             // start media muxer
             mediaMuxer.start();
-            muxerStarted = true;
 
             // init decoder and encoder
             MediaFormat mediaFormat = MediaFormat.createVideoFormat("video/avc", videoWidth, videoHeight);
@@ -299,8 +281,12 @@ public class VideoWatermarkAddAction extends AbstractAction {
                     if (sampleSize == -1) {
                         videoReadDone = true;
                         Log.d(TAG, "addWatermark, read video done.");
-//                        decoder.signalEndOfInputStream();
-                        decoder.queueInputBuffer(decodeInputBufferId, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                        decoder.queueInputBuffer(
+                                decodeInputBufferId,
+                                0,
+                                0,
+                                0,
+                                MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                     } else {
                         decoder.queueInputBuffer(
                                 decodeInputBufferId,
@@ -328,17 +314,18 @@ public class VideoWatermarkAddAction extends AbstractAction {
                         default:
                             if (decodeOutputBufferId >= 0) {
                                 decoder.releaseOutputBuffer(decodeOutputBufferId, true);
-                                // This waits for the image and renders it after it arrives.
-                                outputSurface.awaitNewImage();
-                                outputSurface.drawImage();
-                                // Send it to the encoder.
-                                inputSurface.setPresentationTime(decodeInfo.presentationTimeUs * 1000);
-                                Log.d(TAG, "addWatermark: ***********************************************");
-                                inputSurface.swapBuffers();
-                                Log.d(TAG, "addWatermark: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-                            }
-                            if ((decodeInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                                decodeDone = true;
+                                if ((decodeInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                                    Logger.d(TAG, "Got decode eos, decode done!");
+                                    encoder.signalEndOfInputStream();
+                                    decodeDone = true;
+                                } else {
+                                    // This waits for the image and renders it after it arrives.
+                                    outputSurface.awaitNewImage();
+                                    outputSurface.drawImage();
+                                    // Send it to the encoder.
+                                    inputSurface.setPresentationTime(decodeInfo.presentationTimeUs * 1000);
+                                    inputSurface.swapBuffers();
+                                }
                             }
                             break;
                     }
@@ -355,6 +342,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
                         }
                         ByteBuffer buffer = encodeOutputBuffers[encodeOutputBufferId];
                         mediaMuxer.writeSampleData(outputVideoTrackId, buffer, encodeInfo);
+                        encoder.releaseOutputBuffer(encodeOutputBufferId, false);
                     }
                 }
 
@@ -369,9 +357,6 @@ public class VideoWatermarkAddAction extends AbstractAction {
 
         private void release() {
             if (mediaMuxer != null) {
-                if (muxerStarted) {
-                    mediaMuxer.stop();
-                }
                 mediaMuxer.release();
             }
 
