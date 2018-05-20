@@ -7,13 +7,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
-import com.createchance.simplevideoeditor.VideoBgmAddAction;
-import com.createchance.simplevideoeditor.VideoBgmRemoveAction;
-import com.createchance.simplevideoeditor.VideoCutAction;
+import com.createchance.simplevideoeditor.actions.VideoBgmAddAction;
+import com.createchance.simplevideoeditor.actions.VideoBgmRemoveAction;
+import com.createchance.simplevideoeditor.actions.VideoCutAction;
 import com.createchance.simplevideoeditor.VideoEditCallback;
 import com.createchance.simplevideoeditor.VideoEditorManager;
-import com.createchance.simplevideoeditor.VideoMergeAction;
-import com.createchance.simplevideoeditor.VideoWatermarkAddAction;
+import com.createchance.simplevideoeditor.actions.VideoMergeAction;
+import com.createchance.simplevideoeditor.actions.VideoWatermarkAddAction;
 
 import java.io.File;
 

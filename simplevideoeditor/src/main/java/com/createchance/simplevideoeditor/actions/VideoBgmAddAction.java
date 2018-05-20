@@ -1,4 +1,4 @@
-package com.createchance.simplevideoeditor;
+package com.createchance.simplevideoeditor.actions;
 
 import android.annotation.TargetApi;
 import android.media.MediaCodec;
@@ -8,6 +8,10 @@ import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
 import android.os.Build;
+
+import com.createchance.simplevideoeditor.Constants;
+import com.createchance.simplevideoeditor.Logger;
+import com.createchance.simplevideoeditor.WorkRunner;
 
 import java.io.File;
 import java.io.IOException;

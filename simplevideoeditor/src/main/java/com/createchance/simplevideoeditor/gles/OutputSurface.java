@@ -1,4 +1,4 @@
-package com.createchance.simplevideoeditor;
+package com.createchance.simplevideoeditor.gles;
 /*
  * Copyright (C) 2013 The Android Open Source Project
  *
@@ -20,7 +20,7 @@ import android.opengl.EGL14;
 import android.util.Log;
 import android.view.Surface;
 
-import com.createchance.simplevideoeditor.gles.VideoFrameDrawer;
+import com.createchance.simplevideoeditor.VideoEditorManager;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -43,7 +43,7 @@ import javax.microedition.khronos.egl.EGLSurface;
  * By default, the Surface will be using a BufferQueue in asynchronous mode, so we
  * can potentially drop frames.
  */
-class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
+public class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
     private static final String TAG = "OutputSurface";
     private static final boolean VERBOSE = false;
     private static final int EGL_OPENGL_ES2_BIT = 4;

@@ -6,10 +6,8 @@ import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 
-import com.createchance.simplevideoeditor.AFilter;
 import com.createchance.simplevideoeditor.GroupFilter;
 import com.createchance.simplevideoeditor.MatrixUtils;
-import com.createchance.simplevideoeditor.NoFilter;
 import com.createchance.simplevideoeditor.R;
 import com.createchance.simplevideoeditor.WaterMarkFilter;
 
@@ -39,7 +37,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
     /**
      * 显示的滤镜
      */
-    private AFilter mShow;
+    private NoFilter mShow;
 
     /**
      * 绘制水印的滤镜
@@ -64,7 +62,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
 
     public VideoFrameDrawer(Resources res) {
         mOesFilter = new OesFilter();
-        mShow = new NoFilter(res);
+        mShow = new NoFilter();
         mBeFilter = new GroupFilter(res);
 
         com.createchance.simplevideoeditor.WaterMarkFilter waterMarkFilter = new WaterMarkFilter(res);
@@ -82,7 +80,6 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         mOesFilter.setUTextureUnit(texture);
 
         mBeFilter.create();
-        mShow.create();
     }
 
     public void onVideoChanged(VideoInfo info) {
@@ -120,7 +117,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         mBeFilter.setTextureId(fTexture[0]);
         mBeFilter.draw();
 
-        mShow.setTextureId(mBeFilter.getOutputTexture());
+        mShow.setUTextureUnit(mBeFilter.getOutputTexture());
         mShow.draw();
     }
 

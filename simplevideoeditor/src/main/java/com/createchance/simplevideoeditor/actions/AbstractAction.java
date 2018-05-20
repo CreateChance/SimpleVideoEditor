@@ -1,4 +1,6 @@
-package com.createchance.simplevideoeditor;
+package com.createchance.simplevideoeditor.actions;
+
+import com.createchance.simplevideoeditor.VideoEditorManager;
 
 import java.io.File;
 
@@ -9,7 +11,7 @@ import java.io.File;
  * @date 25/03/2018
  */
 
-abstract class AbstractAction {
+public abstract class AbstractAction {
 
     private AbstractAction mSuccessNext;
 
@@ -25,18 +27,18 @@ abstract class AbstractAction {
     /**
      * start this action.
      */
-    void start(File inputFile) {
+    public void start(File inputFile) {
         this.mInputFile = inputFile;
         this.mOutputFile = genOutputFile();
     }
 
-    void release() {
+    public void release() {
         if (mOutputFile != null && mOutputFile.exists()) {
             mOutputFile.delete();
         }
     }
 
-    final void successNext(AbstractAction action) {
+    public final void successNext(AbstractAction action) {
         mSuccessNext = action;
     }
 

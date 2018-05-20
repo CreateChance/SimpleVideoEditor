@@ -3,6 +3,8 @@ package com.createchance.simplevideoeditor;
 import android.app.Application;
 import android.content.Context;
 
+import com.createchance.simplevideoeditor.actions.AbstractAction;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,35 +53,35 @@ public class VideoEditorManager {
         return mCurrentEditor;
     }
 
-    File getBaseWorkFolder() {
+    public File getBaseWorkFolder() {
         return mCurrentEditor == null ?
                 null : mCurrentEditor.outputFile == null ?
                 null : mCurrentEditor.outputFile.getParentFile();
     }
 
-    File getOutputFile() {
+    public  File getOutputFile() {
         return mCurrentEditor == null ? null : mCurrentEditor.outputFile;
     }
 
-    void onStart(String action) {
+    public void onStart(String action) {
         if (mCurrentEditor.mCallback != null) {
             mCurrentEditor.mCallback.onStart(action);
         }
     }
 
-    void onProgress(String action, float progress) {
+    public void onProgress(String action, float progress) {
         if (mCurrentEditor.mCallback != null) {
             mCurrentEditor.mCallback.onProgress(action, progress);
         }
     }
 
-    void onSucceed(String action) {
+    public void onSucceed(String action) {
         if (mCurrentEditor.mCallback != null) {
             mCurrentEditor.mCallback.onSucceeded(action);
         }
     }
 
-    void onAllSucceed() {
+    public void onAllSucceed() {
         // clean all the tmp files.
         for (AbstractAction act : mCurrentEditor.actionList) {
             act.release();
@@ -87,7 +89,7 @@ public class VideoEditorManager {
         mCurrentEditor = null;
     }
 
-    void onFailed(String action) {
+    public void onFailed(String action) {
         // clean all the tmp files.
         for (AbstractAction act : mCurrentEditor.actionList) {
             act.release();

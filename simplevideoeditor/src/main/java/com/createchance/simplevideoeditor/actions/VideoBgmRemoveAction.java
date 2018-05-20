@@ -1,4 +1,4 @@
-package com.createchance.simplevideoeditor;
+package com.createchance.simplevideoeditor.actions;
 
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
@@ -6,6 +6,10 @@ import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
 import android.util.Log;
+
+import com.createchance.simplevideoeditor.Constants;
+import com.createchance.simplevideoeditor.Logger;
+import com.createchance.simplevideoeditor.WorkRunner;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +39,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
     }
 
     @Override
-    protected void start(File inputFile) {
+    public void start(File inputFile) {
         super.start(inputFile);
         onStarted();
         mRemoveWorker = new RemoveWorker();

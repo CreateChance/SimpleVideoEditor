@@ -1,4 +1,4 @@
-package com.createchance.simplevideoeditor;
+package com.createchance.simplevideoeditor.actions;
 
 import android.graphics.Bitmap;
 import android.media.MediaCodec;
@@ -8,6 +8,12 @@ import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
 import android.util.Log;
+
+import com.createchance.simplevideoeditor.Constants;
+import com.createchance.simplevideoeditor.Logger;
+import com.createchance.simplevideoeditor.WorkRunner;
+import com.createchance.simplevideoeditor.gles.InputSurface;
+import com.createchance.simplevideoeditor.gles.OutputSurface;
 
 import java.io.File;
 import java.nio.ByteBuffer;
