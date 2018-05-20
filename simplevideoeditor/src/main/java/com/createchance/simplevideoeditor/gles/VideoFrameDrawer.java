@@ -10,7 +10,6 @@ import com.createchance.simplevideoeditor.AFilter;
 import com.createchance.simplevideoeditor.GroupFilter;
 import com.createchance.simplevideoeditor.MatrixUtils;
 import com.createchance.simplevideoeditor.NoFilter;
-import com.createchance.simplevideoeditor.ProcessFilter;
 import com.createchance.simplevideoeditor.R;
 import com.createchance.simplevideoeditor.WaterMarkFilter;
 
@@ -28,10 +27,6 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
     private static final String TAG = "VideoFrameDrawer";
 
     /**
-     * 用于后台绘制的变换矩阵
-     */
-    private float[] OM;
-    /**
      * 用于显示的变换矩阵
      */
     private float[] SM = new float[16];
@@ -45,7 +40,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
      * 显示的滤镜
      */
     private AFilter mShow;
-    private AFilter mProcessFilter;
+
     /**
      * 绘制水印的滤镜
      */
@@ -72,12 +67,6 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         mShow = new NoFilter(res);
         mBeFilter = new GroupFilter(res);
 
-        mProcessFilter = new ProcessFilter(res);
-
-        OM = MatrixUtils.getOriginalMatrix();
-        MatrixUtils.flip(OM, false, true);//矩阵上下翻转
-//        mShow.setMatrix(OM);
-
         com.createchance.simplevideoeditor.WaterMarkFilter waterMarkFilter = new WaterMarkFilter(res);
         waterMarkFilter.setWaterMark(BitmapFactory.decodeResource(res, R.drawable.watermark));
 
@@ -93,7 +82,6 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         mOesFilter.setUTextureUnit(texture);
 
         mBeFilter.create();
-        mProcessFilter.create();
         mShow.create();
     }
 
@@ -119,7 +107,6 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         genTexturesWithParameter(1, fTexture, 0, GLES20.GL_RGBA, viewWidth, viewHeight);
 
         mBeFilter.setSize(viewWidth, viewHeight);
-        mProcessFilter.setSize(viewWidth, viewHeight);
     }
 
     @Override
@@ -133,10 +120,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         mBeFilter.setTextureId(fTexture[0]);
         mBeFilter.draw();
 
-        mProcessFilter.setTextureId(mBeFilter.getOutputTexture());
-        mProcessFilter.draw();
-
-        mShow.setTextureId(mProcessFilter.getOutputTexture());
+        mShow.setTextureId(mBeFilter.getOutputTexture());
         mShow.draw();
     }
 

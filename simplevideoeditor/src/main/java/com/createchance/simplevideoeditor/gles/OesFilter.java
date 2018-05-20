@@ -31,8 +31,6 @@ public class OesFilter extends AbstractFilter {
     private FloatBuffer vertexPositionBuffer;
     private FloatBuffer textureCoordinateBuffer;
 
-    private int textureId;
-
     OesFilter() {
         super(
                 Shaders.BASE_OES_VERTEX_SHADER,
@@ -118,7 +116,6 @@ public class OesFilter extends AbstractFilter {
     }
 
     public void setUTextureUnit(int textureId) {
-        this.textureId = textureId;
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureId);
         GLES20.glUniform1i(shaderParamMap.get(U_TEXTURE_UNIT).location, 0);
