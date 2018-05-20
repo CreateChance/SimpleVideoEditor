@@ -99,6 +99,11 @@ public class NoFilter extends AbstractFilter {
     }
 
     @Override
+    protected void onPreDraw() {
+
+    }
+
+    @Override
     protected void onDraw() {
         glEnableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
         glVertexAttribPointer(
@@ -119,6 +124,11 @@ public class NoFilter extends AbstractFilter {
         glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
         glDisableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
+    }
+
+    @Override
+    protected void onPostDraw() {
+
     }
 
     public void setUMatrix(float[] matrix) {

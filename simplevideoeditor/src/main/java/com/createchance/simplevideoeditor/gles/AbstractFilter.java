@@ -69,11 +69,17 @@ abstract class AbstractFilter {
 
     protected abstract void onClear();
 
+    protected abstract void onPreDraw();
+
     protected abstract void onDraw();
+
+    protected abstract void onPostDraw();
 
     public void draw() {
         onClear();
         glUseProgram(programId);
+        onPreDraw();
         onDraw();
+        onPostDraw();
     }
 }
