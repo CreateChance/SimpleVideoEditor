@@ -1,4 +1,4 @@
-package com.createchance.simplevideoeditor;
+package com.createchance.simplevideoeditor.gles;
 
 import java.io.File;
 

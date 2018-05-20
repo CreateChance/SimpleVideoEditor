@@ -1,12 +1,19 @@
-package com.createchance.simplevideoeditor;
+package com.createchance.simplevideoeditor.gles;
 
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
-import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.util.Log;
+
+import com.createchance.simplevideoeditor.AFilter;
+import com.createchance.simplevideoeditor.GroupFilter;
+import com.createchance.simplevideoeditor.MatrixUtils;
+import com.createchance.simplevideoeditor.NoFilter;
+import com.createchance.simplevideoeditor.ProcessFilter;
+import com.createchance.simplevideoeditor.R;
+import com.createchance.simplevideoeditor.RotationOESFilter;
+import com.createchance.simplevideoeditor.WaterMarkFilter;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -71,7 +78,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         MatrixUtils.flip(OM, false, true);//矩阵上下翻转
 //        mShow.setMatrix(OM);
 
-        WaterMarkFilter waterMarkFilter = new WaterMarkFilter(res);
+        com.createchance.simplevideoeditor.WaterMarkFilter waterMarkFilter = new WaterMarkFilter(res);
         waterMarkFilter.setWaterMark(BitmapFactory.decodeResource(res, R.drawable.watermark));
 
         waterMarkFilter.setPosition(0, 70, 0, 0);
@@ -81,18 +88,10 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        int texture[] = new int[1];
-        GLES20.glGenTextures(1, texture, 0);
-        Log.d(TAG, "onSurfaceCreated, texture id: " + texture[0] + ", error: " + GLES20.glGetError());
-        Log.d(TAG, "onSurfaceCreated, thread: " + Thread.currentThread().getName());
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
-        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-        surfaceTexture = new SurfaceTexture(texture[0]);
+        int texture = OpenGlUtil.createOneOesTexture();
+        surfaceTexture = new SurfaceTexture(texture);
         mPreFilter.create();
-        mPreFilter.setTextureId(texture[0]);
+        mPreFilter.setTextureId(texture);
 
         mBeFilter.create();
         mProcessFilter.create();

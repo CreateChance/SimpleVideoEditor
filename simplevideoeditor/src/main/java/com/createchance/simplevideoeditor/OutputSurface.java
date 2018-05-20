@@ -20,6 +20,8 @@ import android.opengl.EGL14;
 import android.util.Log;
 import android.view.Surface;
 
+import com.createchance.simplevideoeditor.gles.VideoFrameDrawer;
+
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;

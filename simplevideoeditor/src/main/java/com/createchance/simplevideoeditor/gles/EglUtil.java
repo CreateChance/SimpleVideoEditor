@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.createchance.simplevideoeditor;
+package com.createchance.simplevideoeditor.gles;
 
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;
@@ -32,7 +32,7 @@ import static java.util.regex.Pattern.compile;
  * Copy from google cts test for open gl es.
  * url: https://android.googlesource.com/platform/cts/+/master/tests/tests/opengl/src/android/opengl/cts/Egl14Utils.java
  */
-final class EglUtil {
+class EglUtil {
 
     private EglUtil() {
     }

@@ -1,9 +1,11 @@
-package com.createchance.simplevideoeditor;
+package com.createchance.simplevideoeditor.gles;
 
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.GLES11Ext;
+import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.util.Log;
 
@@ -18,6 +20,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Map;
 import java.util.Set;
+
+import javax.microedition.khronos.opengles.GL10;
 
 import static android.opengl.GLES20.GL_COMPILE_STATUS;
 import static android.opengl.GLES20.GL_LINEAR;
@@ -61,18 +65,24 @@ class OpenGlUtil {
     public static boolean DEBUG = true;
 
     public static FloatBuffer getFloatBuffer(float[] data, int bytesPerFloat) {
-        return ByteBuffer
+        FloatBuffer floatBuffer = ByteBuffer
                 .allocateDirect(data.length * bytesPerFloat)
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer()
                 .put(data);
+        floatBuffer.position(0);
+        return floatBuffer;
     }
 
-    public static int loadShaderFromRes(Context context, int resId, int shaderType) {
+    public static int loadShader(int shaderType, String shaderSource) {
+        return compileShader(shaderType, shaderSource);
+    }
+
+    public static int loadShader(Context context, int shaderType, int resId) {
         return compileShader(shaderType, readShaderTextFromRes(context, resId));
     }
 
-    public static int loadShaderFromFile(File shaderFile, int shaderType) {
+    public static int loadShader(int shaderType, File shaderFile) {
         return compileShader(shaderType, readShaderTextFromFile(shaderFile));
     }
 
@@ -127,6 +137,20 @@ class OpenGlUtil {
         }
     }
 
+    public static int createOneOesTexture() {
+        int texture[] = new int[1];
+        GLES20.glGenTextures(1, texture, 0);
+        if (texture[0] == 0) {
+            return 0;
+        }
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
+        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+                GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+        return texture[0];
+    }
+
     public static int loadTextureFromRes(Context context, int resId) {
         return createAndBindTexture(decodeBitmapFromRes(context, resId));
     }
@@ -167,6 +191,15 @@ class OpenGlUtil {
             Log.e(TAG, String.format(op + ": glError 0x%x", error));
             throw new RuntimeException("String.format(op + \": glError 0x%x\", error)");
         }
+    }
+
+    public static float[] getIdentityMatrix() {
+        return new float[]{
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+        };
     }
 
     private static Bitmap decodeBitmapFromRes(Context context, int resId) {
