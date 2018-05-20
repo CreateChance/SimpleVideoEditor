@@ -38,7 +38,7 @@ class Shaders {
                     "\n" +
                     "void main(){\n" +
                     "    gl_Position = u_Matrix * a_Position;\n" +
-                    "    textureCoordinate = v_TextureCoordinates;\n" +
+                    "    v_TextureCoordinates = a_TextureCoordinates;\n" +
                     "}";
 
     static final String BASE_OES_FRAGMENT_SHADER =

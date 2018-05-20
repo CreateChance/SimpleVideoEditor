@@ -66,26 +66,6 @@ public class NoFilter extends AbstractFilter {
                 BYTES_PER_FLOAT
         );
 
-        glEnableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
-        glVertexAttribPointer(
-                shaderParamMap.get(A_POSITION).location,
-                2,
-                GLES20.GL_FLOAT,
-                false,
-                0,
-                vertexPositionBuffer);
-        glEnableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
-        glVertexAttribPointer(
-                shaderParamMap.get(A_TEXTURE_COORDINATES).location,
-                2,
-                GLES20.GL_FLOAT,
-                false,
-                0,
-                textureCoordinateBuffer);
-        glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        glDisableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
-        glDisableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
-
         // set matrix
         setUMatrix(OpenGlUtil.getIdentityMatrix());
     }
@@ -120,7 +100,25 @@ public class NoFilter extends AbstractFilter {
 
     @Override
     protected void onDraw() {
-
+        glEnableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
+        glVertexAttribPointer(
+                shaderParamMap.get(A_POSITION).location,
+                2,
+                GLES20.GL_FLOAT,
+                false,
+                0,
+                vertexPositionBuffer);
+        glEnableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
+        glVertexAttribPointer(
+                shaderParamMap.get(A_TEXTURE_COORDINATES).location,
+                2,
+                GLES20.GL_FLOAT,
+                false,
+                0,
+                textureCoordinateBuffer);
+        glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        glDisableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
+        glDisableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
     }
 
     public void setUMatrix(float[] matrix) {

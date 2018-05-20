@@ -73,6 +73,7 @@ abstract class AbstractFilter {
 
     public void draw() {
         onClear();
+        glUseProgram(programId);
         onDraw();
     }
 }

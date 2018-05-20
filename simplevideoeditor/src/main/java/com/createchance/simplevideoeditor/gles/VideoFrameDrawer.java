@@ -12,7 +12,6 @@ import com.createchance.simplevideoeditor.MatrixUtils;
 import com.createchance.simplevideoeditor.NoFilter;
 import com.createchance.simplevideoeditor.ProcessFilter;
 import com.createchance.simplevideoeditor.R;
-import com.createchance.simplevideoeditor.RotationOESFilter;
 import com.createchance.simplevideoeditor.WaterMarkFilter;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -37,10 +36,11 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
      */
     private float[] SM = new float[16];
     private SurfaceTexture surfaceTexture;
+
     /**
-     * 可选择画面的滤镜
+     * Filter draw origin frames of video to texture.
      */
-    private RotationOESFilter mPreFilter;
+    private OesFilter mOesFilter;
     /**
      * 显示的滤镜
      */
@@ -68,7 +68,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
     private int rotation;
 
     public VideoFrameDrawer(Resources res) {
-        mPreFilter = new RotationOESFilter(res);//旋转相机操作
+        mOesFilter = new OesFilter();
         mShow = new NoFilter(res);
         mBeFilter = new GroupFilter(res);
 
@@ -90,8 +90,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         int texture = OpenGlUtil.createOneOesTexture();
         surfaceTexture = new SurfaceTexture(texture);
-        mPreFilter.create();
-        mPreFilter.setTextureId(texture);
+        mOesFilter.setUTextureUnit(texture);
 
         mBeFilter.create();
         mProcessFilter.create();
@@ -106,7 +105,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
             MatrixUtils.getShowMatrix(SM, info.height, info.width, viewWidth, viewHeight);
         }
 
-        mPreFilter.setMatrix(SM);
+        mOesFilter.setUMatrix(SM);
     }
 
     @Override
@@ -128,7 +127,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         surfaceTexture.updateTexImage();
         bindFrameTexture(fFrame[0], fTexture[0]);
         GLES20.glViewport(0, 0, viewWidth, viewHeight);
-        mPreFilter.draw();
+        mOesFilter.draw();
         unBindFrameBuffer();
 
         mBeFilter.setTextureId(fTexture[0]);
@@ -147,8 +146,8 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
 
     public void setRotation(int rotation) {
         this.rotation = rotation;
-        if (mPreFilter != null) {
-            mPreFilter.setRotation(this.rotation);
+        if (mOesFilter != null) {
+            mOesFilter.setRotation(this.rotation);
         }
     }
 
