@@ -26,6 +26,8 @@ abstract class AbstractFilter {
 
     protected Map<String, OpenGlUtil.ShaderParam> shaderParamMap = new HashMap<>();
 
+    protected int viewWidth, viewHeight;
+
     AbstractFilter(String vertexSource, String fragmentSource) {
         programId = OpenGlUtil.buildProgram(
                 OpenGlUtil.loadShader(GLES20.GL_VERTEX_SHADER, vertexSource),
@@ -75,11 +77,19 @@ abstract class AbstractFilter {
 
     protected abstract void onPostDraw();
 
+    protected abstract void onViewSizeChanged();
+
     public void draw() {
         onClear();
         glUseProgram(programId);
         onPreDraw();
         onDraw();
         onPostDraw();
+    }
+
+    public final void setViewSize(int viewWidth, int viewHeight) {
+        this.viewWidth = viewWidth;
+        this.viewHeight = viewHeight;
+        onViewSizeChanged();
     }
 }

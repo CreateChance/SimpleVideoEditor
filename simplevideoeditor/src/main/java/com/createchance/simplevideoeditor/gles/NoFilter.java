@@ -131,6 +131,11 @@ public class NoFilter extends AbstractFilter {
 
     }
 
+    @Override
+    protected void onViewSizeChanged() {
+
+    }
+
     public void setUMatrix(float[] matrix) {
         glUniformMatrix4fv(shaderParamMap.get(U_MATRIX).location, 1, false, matrix, 0);
     }

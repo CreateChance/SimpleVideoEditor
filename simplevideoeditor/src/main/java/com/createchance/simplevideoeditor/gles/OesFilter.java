@@ -127,12 +127,13 @@ public class OesFilter extends AbstractFilter {
         unBindFrameBuffer();
     }
 
-    public void setViewSize(int width, int height) {
+    @Override
+    protected void onViewSizeChanged() {
         GLES20.glDeleteFramebuffers(1, fFrame, 0);
         GLES20.glDeleteTextures(1, fTexture, 0);
 
         GLES20.glGenFramebuffers(1, fFrame, 0);
-        genTexturesWithParameter(1, fTexture, 0, GLES20.GL_RGBA, width, height);
+        genTexturesWithParameter(1, fTexture, 0, GLES20.GL_RGBA, viewWidth, viewHeight);
     }
 
     public void setUMatrix(float[] matrix) {
