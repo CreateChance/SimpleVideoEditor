@@ -26,6 +26,10 @@ public class WaterMarkFilter extends NoFilter {
     /***/
     private NoFilter mFilter;
 
+    private int[] fFrame = new int[1];
+    private int[] fRender = new int[1];
+    private int[] fTexture = new int[1];
+
     public WaterMarkFilter(Resources mRes) {
         super(mRes);
         mFilter = new NoFilter(mRes) {
@@ -44,6 +48,14 @@ public class WaterMarkFilter extends NoFilter {
 
     @Override
     public void draw() {
+        GLES20.glViewport(0, 0, width, height);
+
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fFrame[0]);
+        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+                GLES20.GL_TEXTURE_2D, fTexture[0], 0);
+        GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER, GLES20.GL_DEPTH_ATTACHMENT,
+                GLES20.GL_RENDERBUFFER, fRender[0]);
+
         super.draw();
         GLES20.glViewport(x, y, w == 0 ? mBitmap.getWidth() : w, h == 0 ? mBitmap.getHeight() : h);
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
@@ -52,6 +64,8 @@ public class WaterMarkFilter extends NoFilter {
         mFilter.draw();
         GLES20.glDisable(GLES20.GL_BLEND);
         GLES20.glViewport(0, 0, width, height);
+
+        unBindFrame();
     }
 
     @Override
@@ -59,6 +73,11 @@ public class WaterMarkFilter extends NoFilter {
         super.onCreate();
         mFilter.create();
         createTexture();
+    }
+
+    @Override
+    public int getOutputTexture() {
+        return fTexture[0];
     }
 
     private int[] textures = new int[1];
@@ -90,6 +109,7 @@ public class WaterMarkFilter extends NoFilter {
         this.width = width;
         this.height = height;
         mFilter.setSize(width, height);
+        createFrameBuffer();
     }
 
     public void setPosition(int x, int y, int width, int height) {
@@ -97,5 +117,50 @@ public class WaterMarkFilter extends NoFilter {
         this.y = y;
         this.w = width;
         this.h = height;
+    }
+
+    private void createFrameBuffer() {
+        GLES20.glGenFramebuffers(1, fFrame, 0);
+        GLES20.glGenRenderbuffers(1, fRender, 0);
+
+        genTextures();
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fFrame[0]);
+        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, fRender[0]);
+        GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER, GLES20.GL_DEPTH_COMPONENT16, width,
+                height);
+        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+                GLES20.GL_TEXTURE_2D, fTexture[0], 0);
+        GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER, GLES20.GL_DEPTH_ATTACHMENT,
+                GLES20.GL_RENDERBUFFER, fRender[0]);
+//        int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
+//        if(status==GLES20.GL_FRAMEBUFFER_COMPLETE){
+//            return true;
+//        }
+        unBindFrame();
+    }
+
+    //生成Textures
+    private void genTextures() {
+        GLES20.glGenTextures(1, fTexture, 0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fTexture[0]);
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height,
+                0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+    }
+
+    //取消绑定Texture
+    private void unBindFrame() {
+        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, 0);
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+    }
+
+
+    private void deleteFrameBuffer() {
+        GLES20.glDeleteRenderbuffers(1, fRender, 0);
+        GLES20.glDeleteFramebuffers(1, fFrame, 0);
+        GLES20.glDeleteTextures(1, fTexture, 0);
     }
 }

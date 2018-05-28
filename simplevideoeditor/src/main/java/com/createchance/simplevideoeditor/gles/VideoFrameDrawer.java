@@ -6,7 +6,6 @@ import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 
-import com.createchance.simplevideoeditor.GroupFilter;
 import com.createchance.simplevideoeditor.MatrixUtils;
 import com.createchance.simplevideoeditor.R;
 import com.createchance.simplevideoeditor.WaterMarkFilter;
@@ -42,7 +41,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
     /**
      * 绘制水印的滤镜
      */
-    private final GroupFilter mBeFilter;
+    private WaterMarkFilter mWaterMarkFilter;
 
     /**
      * 控件的长宽
@@ -58,13 +57,11 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
     public VideoFrameDrawer(Resources res) {
         mOesFilter = new OesFilter();
         mShow = new NoFilter();
-        mBeFilter = new GroupFilter(res);
+        mWaterMarkFilter = new WaterMarkFilter(res);
 
-        com.createchance.simplevideoeditor.WaterMarkFilter waterMarkFilter = new WaterMarkFilter(res);
-        waterMarkFilter.setWaterMark(BitmapFactory.decodeResource(res, R.drawable.watermark));
+        mWaterMarkFilter.setWaterMark(BitmapFactory.decodeResource(res, R.drawable.watermark));
 
-        waterMarkFilter.setPosition(0, 70, 0, 0);
-        mBeFilter.addFilter(waterMarkFilter);
+        mWaterMarkFilter.setPosition(0, 70, 0, 0);
     }
 
     @Override
@@ -72,8 +69,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         int texture = OpenGlUtil.createOneOesTexture();
         surfaceTexture = new SurfaceTexture(texture);
         mOesFilter.setUTextureUnit(texture);
-
-        mBeFilter.create();
+        mWaterMarkFilter.create();
     }
 
     public void onVideoChanged(VideoInfo info) {
@@ -93,7 +89,7 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         viewHeight = height;
         mOesFilter.setViewSize(width, height);
 
-        mBeFilter.setSize(viewWidth, viewHeight);
+        mWaterMarkFilter.setSize(viewWidth, viewHeight);
     }
 
     @Override
@@ -101,11 +97,10 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         surfaceTexture.updateTexImage();
         GLES20.glViewport(0, 0, viewWidth, viewHeight);
         mOesFilter.draw();
+        mWaterMarkFilter.setTextureId(mOesFilter.getTextureId());
+        mWaterMarkFilter.draw();
 
-        mBeFilter.setTextureId(mOesFilter.getTextureId());
-        mBeFilter.draw();
-
-        mShow.setUTextureUnit(mBeFilter.getOutputTexture());
+        mShow.setUTextureUnit(mWaterMarkFilter.getOutputTexture());
         mShow.draw();
     }
 
