@@ -1,17 +1,14 @@
 package com.createchance.simplevideoeditor.gles;
 
-import android.content.res.Resources;
-import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
-import android.opengl.GLSurfaceView;
+import android.util.Log;
 
-import com.createchance.simplevideoeditor.MatrixUtils;
-import com.createchance.simplevideoeditor.R;
-import com.createchance.simplevideoeditor.WaterMarkFilter;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
+import static android.opengl.GLES20.glClear;
+import static android.opengl.GLES20.glClearColor;
 
 /**
  * ${DESC}
@@ -19,7 +16,7 @@ import javax.microedition.khronos.opengles.GL10;
  * @author gaochao1-iri
  * @date 30/04/2018
  */
-public class VideoFrameDrawer implements GLSurfaceView.Renderer {
+public class VideoFrameDrawer {
 
     private static final String TAG = "VideoFrameDrawer";
 
@@ -39,69 +36,67 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
     private NoFilter mShow;
 
     /**
-     * 绘制水印的滤镜
+     * Surface's size
      */
-    private WaterMarkFilter mWaterMarkFilter;
-
-    /**
-     * 控件的长宽
-     */
-    private int viewWidth;
-    private int viewHeight;
+    private int surfaceWidth;
+    private int surfaceHeight;
 
     /**
      * 用于视频旋转的参数
      */
     private int rotation;
 
-    public VideoFrameDrawer(Resources res) {
+    private int[] fboFrame = new int[1];
+    private int[] fboTexture = new int[1];
+
+    private List<AbstractFilter> filterList = new ArrayList<>();
+
+    public VideoFrameDrawer() {
         mOesFilter = new OesFilter();
         mShow = new NoFilter();
-        mWaterMarkFilter = new WaterMarkFilter(res);
-
-        mWaterMarkFilter.setWaterMark(BitmapFactory.decodeResource(res, R.drawable.watermark));
-
-        mWaterMarkFilter.setPosition(0, 70, 0, 0);
     }
 
-    @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        int texture = OpenGlUtil.createOneOesTexture();
-        surfaceTexture = new SurfaceTexture(texture);
-        mOesFilter.setUTextureUnit(texture);
-        mWaterMarkFilter.create();
+    public void createSurfaceTexture() {
+        int oesTexture = OpenGlUtil.createOneOesTexture();
+        surfaceTexture = new SurfaceTexture(oesTexture);
+        mOesFilter.setInputTextureId(oesTexture);
     }
 
-    public void onVideoChanged(VideoInfo info) {
-        setRotation(info.rotation);
-        if (info.rotation == 0 || info.rotation == 180) {
-            MatrixUtils.getShowMatrix(SM, info.width, info.height, viewWidth, viewHeight);
-        } else {
-            MatrixUtils.getShowMatrix(SM, info.height, info.width, viewWidth, viewHeight);
+    public void setSurfaceSize(int width, int height) {
+        surfaceWidth = width;
+        surfaceHeight = height;
+
+        // delete old frame buffer.
+//        deleteFrameBuffer();
+        // create a new frame buffer now.
+//        createFrameBuffer();
+
+        mOesFilter.setViewSize(surfaceWidth, surfaceHeight);
+
+        for (AbstractFilter filter : filterList) {
+            filter.setViewSize(surfaceWidth, surfaceHeight);
         }
 
-        mOesFilter.setUMatrix(SM);
+//        mShow.setInputTextureId(fboTexture[0]);
     }
 
-    @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-        viewWidth = width;
-        viewHeight = height;
-        mOesFilter.setViewSize(width, height);
-
-        mWaterMarkFilter.setSize(viewWidth, viewHeight);
-    }
-
-    @Override
-    public void onDrawFrame(GL10 gl) {
+    public void draw() {
         surfaceTexture.updateTexImage();
-        GLES20.glViewport(0, 0, viewWidth, viewHeight);
-        mOesFilter.draw();
-        mWaterMarkFilter.setTextureId(mOesFilter.getTextureId());
-        mWaterMarkFilter.draw();
+        // clear screen to black default.
+//        glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+//        glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+//        bindFrameBuffer();
 
-        mShow.setUTextureUnit(mWaterMarkFilter.getOutputTexture());
-        mShow.draw();
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
+        mOesFilter.draw();
+        for (AbstractFilter filter : filterList) {
+            filter.draw();
+        }
+//        unbindFrameBuffer();
+//        mShow.draw();
+        OpenGlUtil.assertNoError("onDrawFrame");
     }
 
     public SurfaceTexture getSurfaceTexture() {
@@ -115,10 +110,45 @@ public class VideoFrameDrawer implements GLSurfaceView.Renderer {
         }
     }
 
-    public void checkGlError(String s) {
-        int error;
-        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-            throw new RuntimeException(s + ": glError " + error);
-        }
+    public void release() {
+//        deleteFrameBuffer();
+    }
+
+    public void addFilter(AbstractFilter filter) {
+        filterList.add(filter);
+    }
+
+    private void createFrameBuffer() {
+        GLES20.glGenFramebuffers(1, fboFrame, 0);
+        GLES20.glGenTextures(1, fboTexture, 0);
+        // bind to fbo texture cause we are going to do setting.
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fboTexture[0]);
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, surfaceWidth, surfaceHeight,
+                0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
+        // 设置缩小过滤为使用纹理中坐标最接近的一个像素的颜色作为需要绘制的像素颜色
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+        // 设置放大过滤为使用纹理中坐标最接近的若干个颜色，通过加权平均算法得到需要绘制的像素颜色
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        // 设置环绕方向S，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+        // 设置环绕方向T，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+        // unbind fbo texture.
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+    }
+
+    private void bindFrameBuffer() {
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboFrame[0]);
+        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+                GLES20.GL_TEXTURE_2D, fboTexture[0], 0);
+    }
+
+    private void unbindFrameBuffer() {
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+    }
+
+    private void deleteFrameBuffer() {
+        GLES20.glDeleteFramebuffers(1, fboFrame, 0);
+        GLES20.glDeleteTextures(1, fboTexture, 0);
     }
 }

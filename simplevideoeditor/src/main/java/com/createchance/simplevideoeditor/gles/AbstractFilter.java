@@ -26,7 +26,9 @@ abstract class AbstractFilter {
 
     protected Map<String, OpenGlUtil.ShaderParam> shaderParamMap = new HashMap<>();
 
-    protected int viewWidth, viewHeight;
+    protected int surfaceWidth, surfaceHeight;
+
+    protected int inputTextureId;
 
     AbstractFilter(String vertexSource, String fragmentSource) {
         programId = OpenGlUtil.buildProgram(
@@ -69,18 +71,21 @@ abstract class AbstractFilter {
 
     protected abstract void initParamMap();
 
-    protected abstract void onClear();
-
-    protected abstract void onPreDraw();
-
     protected abstract void onDraw();
 
-    protected abstract void onPostDraw();
+    protected void onPreDraw() {
 
-    protected abstract void onViewSizeChanged();
+    }
 
-    public void draw() {
-        onClear();
+    protected void onPostDraw() {
+
+    }
+
+    protected void onViewSizeChanged() {
+
+    }
+
+    public final void draw() {
         glUseProgram(programId);
         onPreDraw();
         onDraw();
@@ -88,8 +93,12 @@ abstract class AbstractFilter {
     }
 
     public final void setViewSize(int viewWidth, int viewHeight) {
-        this.viewWidth = viewWidth;
-        this.viewHeight = viewHeight;
+        this.surfaceWidth = viewWidth;
+        this.surfaceHeight = viewHeight;
         onViewSizeChanged();
+    }
+
+    public final void setInputTextureId(int textureId) {
+        this.inputTextureId = textureId;
     }
 }

@@ -4,8 +4,7 @@ import android.opengl.GLES20;
 
 import java.nio.FloatBuffer;
 
-import static android.opengl.GLES10.glClear;
-import static android.opengl.GLES10.glClearColor;
+import static android.opengl.GLES10.glViewport;
 import static android.opengl.GLES20.GL_TEXTURE0;
 import static android.opengl.GLES20.GL_TEXTURE_2D;
 import static android.opengl.GLES20.glActiveTexture;
@@ -36,8 +35,6 @@ public class NoFilter extends AbstractFilter {
 
     private FloatBuffer vertexPositionBuffer;
     private FloatBuffer textureCoordinateBuffer;
-
-    protected int textureId;
 
     NoFilter() {
         super(
@@ -92,15 +89,12 @@ public class NoFilter extends AbstractFilter {
     }
 
     @Override
-    protected void onClear() {
-        // clear screen color to black.
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-    }
-
-    @Override
     protected void onPreDraw() {
-
+        glViewport(0, 0, surfaceWidth, surfaceHeight);
+        // bind texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, inputTextureId);
+        glUniform1i(shaderParamMap.get(U_TEXTURE_UNIT).location, 0);
     }
 
     @Override
@@ -126,24 +120,7 @@ public class NoFilter extends AbstractFilter {
         glDisableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
     }
 
-    @Override
-    protected void onPostDraw() {
-
-    }
-
-    @Override
-    protected void onViewSizeChanged() {
-
-    }
-
     public void setUMatrix(float[] matrix) {
         glUniformMatrix4fv(shaderParamMap.get(U_MATRIX).location, 1, false, matrix, 0);
-    }
-
-    public void setUTextureUnit(int textureId) {
-        this.textureId = textureId;
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureId);
-        glUniform1i(shaderParamMap.get(U_TEXTURE_UNIT).location, 0);
     }
 }

@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.opengl.Matrix;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -200,6 +201,13 @@ class OpenGlUtil {
                 0, 0, 1, 0,
                 0, 0, 0, 1
         };
+    }
+
+    public static float[] flip(float[] m, boolean x, boolean y) {
+        if (x || y) {
+            Matrix.scaleM(m, 0, x ? -1 : 1, y ? -1 : 1, 1);
+        }
+        return m;
     }
 
     private static Bitmap decodeBitmapFromRes(Context context, int resId) {

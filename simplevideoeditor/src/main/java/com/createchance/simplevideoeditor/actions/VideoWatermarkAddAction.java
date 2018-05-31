@@ -14,6 +14,7 @@ import com.createchance.simplevideoeditor.Logger;
 import com.createchance.simplevideoeditor.WorkRunner;
 import com.createchance.simplevideoeditor.gles.InputSurface;
 import com.createchance.simplevideoeditor.gles.OutputSurface;
+import com.createchance.simplevideoeditor.gles.WaterMarkFilter;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -34,6 +35,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
     private Bitmap mWatermark;
     private int mXPos;
     private int mYPos;
+    private float mScaleFactor = 1;
 
     private VideoWatermarkAddAction() {
         super(Constants.ACTION_ADD_WATER_MARK);
@@ -105,6 +107,12 @@ public class VideoWatermarkAddAction extends AbstractAction {
 
         public Builder from(long fromMs) {
             watermarkAddAction.mFromMs = fromMs;
+
+            return this;
+        }
+
+        public Builder scaleFactor(float scaleFactor) {
+            watermarkAddAction.mScaleFactor = scaleFactor;
 
             return this;
         }
@@ -200,7 +208,6 @@ public class VideoWatermarkAddAction extends AbstractAction {
                 MediaFormat mediaFormat = mediaExtractor.getTrackFormat(i);
                 String mime = mediaFormat.getString(MediaFormat.KEY_MIME);
                 if (mime.startsWith("video")) {
-                    Logger.d("GAOCHAO", "video format: " + mediaFormat);
                     inputVideoTrackId = i;
                     outputVideoTrackId = mediaMuxer.addTrack(mediaFormat);
                     videoFormat = mediaFormat;
@@ -231,6 +238,8 @@ public class VideoWatermarkAddAction extends AbstractAction {
             encoder.start();
 
             outputSurface = new OutputSurface(videoWidth, videoHeight);
+            WaterMarkFilter filter = new WaterMarkFilter(mWatermark, mXPos, mYPos, mScaleFactor);
+            outputSurface.addFilter(filter);
             decoder = MediaCodec.createDecoderByType("video/avc");
             decoder.configure(videoFormat, outputSurface.getSurface(), null, 0);
             decoder.start();
@@ -378,6 +387,10 @@ public class VideoWatermarkAddAction extends AbstractAction {
             if (encoder != null) {
                 encoder.stop();
                 encoder.release();
+            }
+
+            if (outputSurface != null) {
+                outputSurface.release();
             }
         }
     }

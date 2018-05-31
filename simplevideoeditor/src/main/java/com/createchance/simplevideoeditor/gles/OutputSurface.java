@@ -81,9 +81,9 @@ public class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
 //        mTextureRender = new TextureRender(info);
 //        mTextureRender.surfaceCreated();
 
-        mDrawer = new VideoFrameDrawer(VideoEditorManager.getManager().getContext().getResources());
-        mDrawer.onSurfaceCreated(null, null);
-        mDrawer.onSurfaceChanged(null, width, height);
+        mDrawer = new VideoFrameDrawer();
+        mDrawer.createSurfaceTexture();
+        mDrawer.setSurfaceSize(width, height);
 
         // Even if we don't access the SurfaceTexture after the constructor returns, we
         // still need to keep a reference to it.  The Surface doesn't retain a reference
@@ -106,6 +106,10 @@ public class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
         // but we should be able to get away with it here.
         mSurfaceTexture.setOnFrameAvailableListener(this);
         mSurface = new Surface(mSurfaceTexture);
+    }
+
+    public void addFilter(AbstractFilter filter) {
+        mDrawer.addFilter(filter);
     }
 
     /**
@@ -181,6 +185,7 @@ public class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
         mEGLSurface = null;
         mEGL = null;
 //        mTextureRender = null;
+        mDrawer.release();
         mDrawer = null;
         mSurface = null;
         mSurfaceTexture = null;
@@ -248,7 +253,7 @@ public class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
      */
     public void drawImage() {
 //        mTextureRender.drawFrame(mSurfaceTexture);
-        mDrawer.onDrawFrame(null);
+        mDrawer.draw();
     }
 
     @Override

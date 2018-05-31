@@ -7,11 +7,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
+import com.createchance.simplevideoeditor.VideoEditCallback;
+import com.createchance.simplevideoeditor.VideoEditorManager;
 import com.createchance.simplevideoeditor.actions.VideoBgmAddAction;
 import com.createchance.simplevideoeditor.actions.VideoBgmRemoveAction;
 import com.createchance.simplevideoeditor.actions.VideoCutAction;
-import com.createchance.simplevideoeditor.VideoEditCallback;
-import com.createchance.simplevideoeditor.VideoEditorManager;
 import com.createchance.simplevideoeditor.actions.VideoMergeAction;
 import com.createchance.simplevideoeditor.actions.VideoWatermarkAddAction;
 
@@ -50,8 +50,9 @@ public class MainActivity extends AppCompatActivity {
 
         VideoWatermarkAddAction watermarkAddAction = new VideoWatermarkAddAction.Builder()
                 .watermark(BitmapFactory.decodeResource(getResources(), R.drawable.watermark))
-                .atXPos(200)
-                .atYPos(400)
+                .atXPos(1000)
+                .atYPos(600)
+                .scaleFactor(0.3f)
                 .build();
         VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
                 .bgmFile(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
