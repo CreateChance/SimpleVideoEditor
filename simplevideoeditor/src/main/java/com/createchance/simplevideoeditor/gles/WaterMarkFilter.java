@@ -24,7 +24,6 @@ public class WaterMarkFilter extends NoFilter {
         this.watermarkHeight = (int) (watermark.getHeight() * scaleFactor);
         //对画面进行矩阵旋转
 //        setUMatrix(OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(),false,true));
-        setUMatrix(OpenGlUtil.getIdentityMatrix());
 
         setInputTextureId(OpenGlUtil.loadTexture(watermark));
     }

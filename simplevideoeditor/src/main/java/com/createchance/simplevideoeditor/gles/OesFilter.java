@@ -58,9 +58,12 @@ public class OesFilter extends AbstractFilter {
                 BYTES_PER_FLOAT
         );
 
-        // set matrix
+        // set uniform vars
 //        setUMatrix(OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(), false, true));
         setUMatrix(OpenGlUtil.getIdentityMatrix());
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, inputTextureId);
+        GLES20.glUniform1i(shaderParamMap.get(U_TEXTURE_UNIT).location, 0);
     }
 
     @Override
@@ -88,9 +91,6 @@ public class OesFilter extends AbstractFilter {
     protected void onPreDraw() {
         super.onPreDraw();
         glViewport(0, 0, surfaceWidth, surfaceHeight);
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, inputTextureId);
-        GLES20.glUniform1i(shaderParamMap.get(U_TEXTURE_UNIT).location, 0);
     }
 
     @Override
