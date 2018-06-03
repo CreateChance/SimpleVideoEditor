@@ -51,6 +51,7 @@ import static android.opengl.GLES20.glGetShaderiv;
 import static android.opengl.GLES20.glGetUniformLocation;
 import static android.opengl.GLES20.glLinkProgram;
 import static android.opengl.GLES20.glShaderSource;
+import static android.opengl.GLES20.glTexParameterf;
 import static android.opengl.GLES20.glTexParameteri;
 import static android.opengl.GLES20.glValidateProgram;
 
@@ -145,19 +146,23 @@ class OpenGlUtil {
             return 0;
         }
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
-        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+        glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
                 GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
+        glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
                 GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
         return texture[0];
     }
 
-    public static int loadTextureFromRes(Context context, int resId) {
-        return createAndBindTexture(decodeBitmapFromRes(context, resId));
+    public static int loadTexture(Context context, int textureResId) {
+        return createAndBindTexture(decodeBitmapFromRes(context, textureResId));
     }
 
-    public static int loadTextureFromFile(File imgFile) {
-        return createAndBindTexture(decodeBitmapFromFile(imgFile));
+    public static int loadTexture(File textureFile) {
+        return createAndBindTexture(decodeBitmapFromFile(textureFile));
+    }
+
+    public static int loadTexture(Bitmap textureBitmap) {
+        return createAndBindTexture(textureBitmap);
     }
 
     public static void perspectiveM(float[] m, float yFovInDegrees, float aspect,
@@ -243,6 +248,10 @@ class OpenGlUtil {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         // 纹理放大的时候使用双线性过滤
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // 设置环绕方向S，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
+        glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+        // 设置环绕方向T，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
+        glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 
         // 加载位图到opengl中
         GLUtils.texImage2D(GL_TEXTURE_2D, 0, texture, 0);
