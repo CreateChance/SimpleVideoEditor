@@ -1,6 +1,5 @@
 package com.createchance.simplevideoeditor.actions;
 
-import android.graphics.Bitmap;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaExtractor;
@@ -14,6 +13,7 @@ import com.createchance.simplevideoeditor.Logger;
 import com.createchance.simplevideoeditor.WorkRunner;
 import com.createchance.simplevideoeditor.gles.InputSurface;
 import com.createchance.simplevideoeditor.gles.OutputSurface;
+import com.createchance.simplevideoeditor.gles.VideoFrameLookupFilter;
 import com.createchance.simplevideoeditor.gles.WaterMarkFilter;
 
 import java.io.File;
@@ -26,18 +26,16 @@ import java.nio.ByteBuffer;
  * @date 25/03/2018
  */
 
-public class VideoWatermarkAddAction extends AbstractAction {
+public class VideoFilterAddAction extends AbstractAction {
 
-    private static final String TAG = "VideoWatermarkAddAction";
+    private static final String TAG = "VideoFilterAddAction";
 
     private long mFromMs;
     private long mDurationMs;
-    private Bitmap mWatermark;
-    private int mXPos;
-    private int mYPos;
-    private float mScaleFactor = 1;
+    private WaterMarkFilter mWaterMarkFilter;
+    private VideoFrameLookupFilter mVideoFrameLookupFilter;
 
-    private VideoWatermarkAddAction() {
+    private VideoFilterAddAction() {
         super(Constants.ACTION_ADD_WATER_MARK);
     }
 
@@ -57,18 +55,6 @@ public class VideoWatermarkAddAction extends AbstractAction {
         return mDurationMs;
     }
 
-    public Bitmap getWatermark() {
-        return mWatermark;
-    }
-
-    public int getXPos() {
-        return mXPos;
-    }
-
-    public int getYPos() {
-        return mYPos;
-    }
-
     @Override
     public void start(File inputFile) {
         super.start(inputFile);
@@ -81,26 +67,19 @@ public class VideoWatermarkAddAction extends AbstractAction {
     @Override
     public void release() {
         super.release();
-        this.mWatermark.recycle();
     }
 
     public static class Builder {
-        private VideoWatermarkAddAction watermarkAddAction = new VideoWatermarkAddAction();
+        private VideoFilterAddAction watermarkAddAction = new VideoFilterAddAction();
 
-        public Builder watermark(Bitmap watermark) {
-            watermarkAddAction.mWatermark = watermark;
-
-            return this;
-        }
-
-        public Builder atXPos(int posX) {
-            watermarkAddAction.mXPos = posX;
+        public Builder watermarkFilter(WaterMarkFilter filter) {
+            watermarkAddAction.mWaterMarkFilter = filter;
 
             return this;
         }
 
-        public Builder atYPos(int posY) {
-            watermarkAddAction.mYPos = posY;
+        public Builder frameFilter(VideoFrameLookupFilter filter) {
+            watermarkAddAction.mVideoFrameLookupFilter = filter;
 
             return this;
         }
@@ -111,19 +90,13 @@ public class VideoWatermarkAddAction extends AbstractAction {
             return this;
         }
 
-        public Builder scaleFactor(float scaleFactor) {
-            watermarkAddAction.mScaleFactor = scaleFactor;
-
-            return this;
-        }
-
         public Builder duration(long durationMs) {
             watermarkAddAction.mDurationMs = durationMs;
 
             return this;
         }
 
-        public VideoWatermarkAddAction build() {
+        public VideoFilterAddAction build() {
             return watermarkAddAction;
         }
     }
@@ -165,8 +138,6 @@ public class VideoWatermarkAddAction extends AbstractAction {
                     mInputFile.exists() &&
                     mInputFile.isFile() &&
                     mOutputFile != null &&
-                    mWatermark != null &&
-                    !mWatermark.isRecycled() &&
                     mFromMs >= 0 &&
                     mDurationMs >= 0) {
                 MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
@@ -237,9 +208,7 @@ public class VideoWatermarkAddAction extends AbstractAction {
             inputSurface.makeCurrent();
             encoder.start();
 
-            outputSurface = new OutputSurface(videoWidth, videoHeight);
-            WaterMarkFilter filter = new WaterMarkFilter(mWatermark, mXPos, mYPos, mScaleFactor);
-            outputSurface.addFilter(filter);
+            outputSurface = new OutputSurface(videoWidth, videoHeight, mWaterMarkFilter, mVideoFrameLookupFilter);
             decoder = MediaCodec.createDecoderByType("video/avc");
             decoder.configure(videoFormat, outputSurface.getSurface(), null, 0);
             decoder.start();

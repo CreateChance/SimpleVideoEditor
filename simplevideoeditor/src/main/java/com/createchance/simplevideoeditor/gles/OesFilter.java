@@ -2,6 +2,7 @@ package com.createchance.simplevideoeditor.gles;
 
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
+import android.util.Log;
 
 import java.nio.FloatBuffer;
 
@@ -37,7 +38,32 @@ public class OesFilter extends AbstractFilter {
                 Shaders.BASE_OES_VERTEX_SHADER,
                 Shaders.BASE_OES_FRAGMENT_SHADER
         );
+    }
 
+    @Override
+    protected void initParamMap() {
+        shaderParamMap.clear();
+        shaderParamMap.put(
+                A_POSITION,
+                new OpenGlUtil.ShaderParam(TYPE_ATTRIBUTE, A_POSITION)
+        );
+        shaderParamMap.put(
+                A_TEXTURE_COORDINATES,
+                new OpenGlUtil.ShaderParam(TYPE_ATTRIBUTE, A_TEXTURE_COORDINATES)
+        );
+        shaderParamMap.put(
+                U_MATRIX,
+                new OpenGlUtil.ShaderParam(TYPE_UNIFORM, U_MATRIX)
+        );
+        shaderParamMap.put(
+                U_TEXTURE_UNIT,
+                new OpenGlUtil.ShaderParam(TYPE_UNIFORM, U_TEXTURE_UNIT)
+        );
+    }
+
+    @Override
+    protected void onInitDone() {
+        super.onInitDone();
         vertexPositionBuffer = OpenGlUtil.getFloatBuffer(
                 new float[]{
                         -1.0f, 1.0f,
@@ -64,27 +90,6 @@ public class OesFilter extends AbstractFilter {
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, inputTextureId);
         GLES20.glUniform1i(shaderParamMap.get(U_TEXTURE_UNIT).location, 0);
-    }
-
-    @Override
-    protected void initParamMap() {
-        shaderParamMap.clear();
-        shaderParamMap.put(
-                A_POSITION,
-                new OpenGlUtil.ShaderParam(TYPE_ATTRIBUTE, A_POSITION)
-        );
-        shaderParamMap.put(
-                A_TEXTURE_COORDINATES,
-                new OpenGlUtil.ShaderParam(TYPE_ATTRIBUTE, A_TEXTURE_COORDINATES)
-        );
-        shaderParamMap.put(
-                U_MATRIX,
-                new OpenGlUtil.ShaderParam(TYPE_UNIFORM, U_MATRIX)
-        );
-        shaderParamMap.put(
-                U_TEXTURE_UNIT,
-                new OpenGlUtil.ShaderParam(TYPE_UNIFORM, U_TEXTURE_UNIT)
-        );
     }
 
     @Override

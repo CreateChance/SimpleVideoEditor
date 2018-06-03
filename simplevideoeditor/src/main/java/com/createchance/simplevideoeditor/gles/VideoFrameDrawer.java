@@ -2,10 +2,6 @@ package com.createchance.simplevideoeditor.gles;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
-import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static android.opengl.GLES20.glClear;
 import static android.opengl.GLES20.glClearColor;
@@ -35,6 +31,10 @@ public class VideoFrameDrawer {
      */
     private NoFilter mShow;
 
+    private WaterMarkFilter waterMarkFilter;
+
+    private VideoFrameLookupFilter videoFrameLookupFilter;
+
     /**
      * Surface's size
      */
@@ -49,11 +49,11 @@ public class VideoFrameDrawer {
     private int[] fboFrame = new int[1];
     private int[] fboTexture = new int[1];
 
-    private List<AbstractFilter> filterList = new ArrayList<>();
-
     public VideoFrameDrawer() {
         mOesFilter = new OesFilter();
         mShow = new NoFilter();
+        mOesFilter.init();
+        mShow.init();
     }
 
     public void createSurfaceTexture() {
@@ -67,17 +67,22 @@ public class VideoFrameDrawer {
         surfaceHeight = height;
 
         // delete old frame buffer.
-//        deleteFrameBuffer();
+        deleteFrameBuffer();
         // create a new frame buffer now.
-//        createFrameBuffer();
+        createFrameBuffer();
 
         mOesFilter.setViewSize(surfaceWidth, surfaceHeight);
 
-        for (AbstractFilter filter : filterList) {
-            filter.setViewSize(surfaceWidth, surfaceHeight);
+        if (waterMarkFilter != null) {
+            waterMarkFilter.setViewSize(surfaceWidth, surfaceHeight);
         }
 
-//        mShow.setInputTextureId(fboTexture[0]);
+        if (videoFrameLookupFilter != null) {
+            videoFrameLookupFilter.setViewSize(surfaceWidth, surfaceHeight);
+            videoFrameLookupFilter.setInputTextureId(fboTexture[0]);
+        }
+
+        mShow.setInputTextureId(fboTexture[0]);
     }
 
     public void draw() {
@@ -91,9 +96,15 @@ public class VideoFrameDrawer {
         glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         mOesFilter.draw();
-        for (AbstractFilter filter : filterList) {
-            filter.draw();
+
+        if (waterMarkFilter != null) {
+            waterMarkFilter.draw();
         }
+
+        if (videoFrameLookupFilter != null) {
+            videoFrameLookupFilter.draw();
+        }
+
 //        unbindFrameBuffer();
 //        mShow.draw();
         OpenGlUtil.assertNoError("onDrawFrame");
@@ -114,8 +125,18 @@ public class VideoFrameDrawer {
 //        deleteFrameBuffer();
     }
 
-    public void addFilter(AbstractFilter filter) {
-        filterList.add(filter);
+    public void setWaterMarkFilter(WaterMarkFilter filter) {
+        this.waterMarkFilter = filter;
+        if (waterMarkFilter != null) {
+            waterMarkFilter.init();
+        }
+    }
+
+    public void setVideoFrameLookupFilter(VideoFrameLookupFilter filter) {
+        this.videoFrameLookupFilter = filter;
+        if (videoFrameLookupFilter != null) {
+            videoFrameLookupFilter.init();
+        }
     }
 
     private void createFrameBuffer() {

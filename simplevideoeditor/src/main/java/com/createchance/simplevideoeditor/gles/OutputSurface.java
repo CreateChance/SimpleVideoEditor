@@ -20,8 +20,6 @@ import android.opengl.EGL14;
 import android.util.Log;
 import android.view.Surface;
 
-import com.createchance.simplevideoeditor.VideoEditorManager;
-
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
@@ -57,13 +55,16 @@ public class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
     private boolean mFrameAvailable;
     //    private TextureRender mTextureRender;
     private VideoFrameDrawer mDrawer;
+    private int surfaceWidth, surfaceHeight;
 
-    public OutputSurface(int width, int height) {
+    public OutputSurface(int width, int height, WaterMarkFilter waterMarkFilter,
+                         VideoFrameLookupFilter videoFrameLookupFilter) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException();
         }
-
-        setup(width, height);
+        this.surfaceWidth = width;
+        this.surfaceHeight = height;
+        setup(waterMarkFilter, videoFrameLookupFilter);
 //        mTextureRender = new TextureRender(info);
 //        mTextureRender.setClipMode(clipMode);
 //        mTextureRender.surfaceCreated();
@@ -77,13 +78,15 @@ public class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
      * Creates instances of TextureRender and SurfaceTexture, and a Surface associated
      * with the SurfaceTexture.
      */
-    private void setup(int width, int height) {
+    private void setup(WaterMarkFilter waterMarkFilter, VideoFrameLookupFilter videoFrameLookupFilter) {
 //        mTextureRender = new TextureRender(info);
 //        mTextureRender.surfaceCreated();
 
         mDrawer = new VideoFrameDrawer();
+        mDrawer.setWaterMarkFilter(waterMarkFilter);
+        mDrawer.setVideoFrameLookupFilter(videoFrameLookupFilter);
         mDrawer.createSurfaceTexture();
-        mDrawer.setSurfaceSize(width, height);
+        mDrawer.setSurfaceSize(surfaceWidth, surfaceHeight);
 
         // Even if we don't access the SurfaceTexture after the constructor returns, we
         // still need to keep a reference to it.  The Surface doesn't retain a reference
@@ -106,10 +109,6 @@ public class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
         // but we should be able to get away with it here.
         mSurfaceTexture.setOnFrameAvailableListener(this);
         mSurface = new Surface(mSurfaceTexture);
-    }
-
-    public void addFilter(AbstractFilter filter) {
-        mDrawer.addFilter(filter);
     }
 
     /**

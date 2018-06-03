@@ -15,13 +15,20 @@ public class WaterMarkFilter extends NoFilter {
 
     private int watermarkPosX, watermarkPosY;
     private int watermarkWidth, watermarkHeight;
+    private Bitmap watermark;
 
     public WaterMarkFilter(Bitmap watermark, int posX, int posY, float scaleFactor) {
         super();
+        this.watermark = watermark;
         this.watermarkPosX = posX;
         this.watermarkPosY = posY;
         this.watermarkWidth = (int) (watermark.getWidth() * scaleFactor);
         this.watermarkHeight = (int) (watermark.getHeight() * scaleFactor);
+    }
+
+    @Override
+    protected void onInitDone() {
+        super.onInitDone();
         //对画面进行矩阵旋转
 //        setUMatrix(OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(),false,true));
 

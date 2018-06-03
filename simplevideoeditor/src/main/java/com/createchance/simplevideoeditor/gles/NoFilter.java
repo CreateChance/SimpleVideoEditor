@@ -43,28 +43,6 @@ public class NoFilter extends AbstractFilter {
                 // fragment shader does nothing.
                 Shaders.BASE_FRAGMENT_SHADER
         );
-
-        vertexPositionBuffer = OpenGlUtil.getFloatBuffer(
-                new float[]{
-                        -1.0f, 1.0f,
-                        -1.0f, -1.0f,
-                        1.0f, 1.0f,
-                        1.0f, -1.0f,
-                },
-                BYTES_PER_FLOAT
-        );
-        textureCoordinateBuffer = OpenGlUtil.getFloatBuffer(
-                new float[]{
-                        0.0f, 0.0f,
-                        0.0f, 1.0f,
-                        1.0f, 0.0f,
-                        1.0f, 1.0f,
-                },
-                BYTES_PER_FLOAT
-        );
-
-        // set matrix
-        setUMatrix(OpenGlUtil.getIdentityMatrix());
     }
 
     @Override
@@ -86,6 +64,32 @@ public class NoFilter extends AbstractFilter {
                 U_TEXTURE_UNIT,
                 new OpenGlUtil.ShaderParam(TYPE_UNIFORM, U_TEXTURE_UNIT)
         );
+    }
+
+    @Override
+    protected void onInitDone() {
+        super.onInitDone();
+        vertexPositionBuffer = OpenGlUtil.getFloatBuffer(
+                new float[]{
+                        -1.0f, 1.0f,
+                        -1.0f, -1.0f,
+                        1.0f, 1.0f,
+                        1.0f, -1.0f,
+                },
+                BYTES_PER_FLOAT
+        );
+        textureCoordinateBuffer = OpenGlUtil.getFloatBuffer(
+                new float[]{
+                        0.0f, 0.0f,
+                        0.0f, 1.0f,
+                        1.0f, 0.0f,
+                        1.0f, 1.0f,
+                },
+                BYTES_PER_FLOAT
+        );
+
+        // set matrix
+        setUMatrix(OpenGlUtil.getIdentityMatrix());
     }
 
     @Override

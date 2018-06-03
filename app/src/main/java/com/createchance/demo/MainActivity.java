@@ -13,7 +13,9 @@ import com.createchance.simplevideoeditor.actions.VideoBgmAddAction;
 import com.createchance.simplevideoeditor.actions.VideoBgmRemoveAction;
 import com.createchance.simplevideoeditor.actions.VideoCutAction;
 import com.createchance.simplevideoeditor.actions.VideoMergeAction;
-import com.createchance.simplevideoeditor.actions.VideoWatermarkAddAction;
+import com.createchance.simplevideoeditor.actions.VideoFilterAddAction;
+import com.createchance.simplevideoeditor.gles.VideoFrameLookupFilter;
+import com.createchance.simplevideoeditor.gles.WaterMarkFilter;
 
 import java.io.File;
 
@@ -48,11 +50,9 @@ public class MainActivity extends AppCompatActivity {
 //            e.printStackTrace();
 //        }
 
-        VideoWatermarkAddAction watermarkAddAction = new VideoWatermarkAddAction.Builder()
-                .watermark(BitmapFactory.decodeResource(getResources(), R.drawable.watermark))
-                .atXPos(1000)
-                .atYPos(600)
-                .scaleFactor(0.3f)
+        VideoFilterAddAction filterAddAction = new VideoFilterAddAction.Builder()
+                .watermarkFilter(new WaterMarkFilter(BitmapFactory.decodeResource(getResources(), R.drawable.watermark), 100, 200, 1))
+//                .addFilter(new VideoFrameLookupFilter(BitmapFactory.decodeResource(getResources(), R.drawable.filter), 1))
                 .build();
         VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
                 .bgmFile(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         VideoEditorManager.getManager()
                 .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
 //                .withAction(bgmAddAction)
-                .withAction(watermarkAddAction)
+                .withAction(filterAddAction)
                 .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/output.mp4"))
                 .commit(new VideoEditCallback() {
                     @Override
