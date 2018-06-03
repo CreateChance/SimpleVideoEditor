@@ -85,8 +85,8 @@ public class OesFilter extends AbstractFilter {
         );
 
         // set uniform vars
-//        setUMatrix(OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(), false, true));
-        setUMatrix(OpenGlUtil.getIdentityMatrix());
+        setUMatrix(OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(), false, true));
+//        setUMatrix(OpenGlUtil.getIdentityMatrix());
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, inputTextureId);
         GLES20.glUniform1i(shaderParamMap.get(U_TEXTURE_UNIT).location, 0);

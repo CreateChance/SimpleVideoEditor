@@ -108,9 +108,10 @@ class Shaders {
                     " \n" +
                     "varying vec2 v_TextureCoordinate;\n" +
                     " \n" +
+                    "uniform mat4 u_Matrix;\n" +
                     "void main()\n" +
                     "{\n" +
-                    "    gl_Position = a_Position;\n" +
+                    "    gl_Position = u_Matrix * a_Position;\n" +
                     "    v_TextureCoordinate = a_InputTextureCoordinate;\n" +
                     "}";
 

@@ -49,6 +49,8 @@ public class VideoFrameDrawer {
     private int[] fboFrame = new int[1];
     private int[] fboTexture = new int[1];
 
+    private boolean capture = true;
+
     public VideoFrameDrawer() {
         mOesFilter = new OesFilter();
         mShow = new NoFilter();
@@ -82,15 +84,13 @@ public class VideoFrameDrawer {
             videoFrameLookupFilter.setInputTextureId(fboTexture[0]);
         }
 
+        mShow.setViewSize(surfaceWidth, surfaceHeight);
         mShow.setInputTextureId(fboTexture[0]);
     }
 
     public void draw() {
         surfaceTexture.updateTexImage();
-        // clear screen to black default.
-//        glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
-//        glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-//        bindFrameBuffer();
+        bindFrameBuffer();
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
@@ -105,8 +105,16 @@ public class VideoFrameDrawer {
             videoFrameLookupFilter.draw();
         }
 
-//        unbindFrameBuffer();
-//        mShow.draw();
+        unbindFrameBuffer();
+        mShow.draw();
+        if (capture) {
+            try {
+                OpenGlUtil.captureImage(surfaceWidth, surfaceHeight);
+                capture = false;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         OpenGlUtil.assertNoError("onDrawFrame");
     }
 

@@ -1,6 +1,7 @@
 package com.createchance.simplevideoeditor.gles;
 
 import android.opengl.GLES20;
+import android.util.Log;
 
 import java.nio.FloatBuffer;
 
@@ -104,6 +105,7 @@ public class NoFilter extends AbstractFilter {
     @Override
     protected void onDraw() {
         glEnableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
+        vertexPositionBuffer.position(0);
         glVertexAttribPointer(
                 shaderParamMap.get(A_POSITION).location,
                 2,
@@ -112,6 +114,7 @@ public class NoFilter extends AbstractFilter {
                 0,
                 vertexPositionBuffer);
         glEnableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
+        textureCoordinateBuffer.position(0);
         glVertexAttribPointer(
                 shaderParamMap.get(A_TEXTURE_COORDINATES).location,
                 2,

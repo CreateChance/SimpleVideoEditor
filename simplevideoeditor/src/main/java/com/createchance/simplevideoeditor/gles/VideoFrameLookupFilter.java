@@ -15,8 +15,10 @@ import static android.opengl.GLES20.glDrawArrays;
 import static android.opengl.GLES20.glEnableVertexAttribArray;
 import static android.opengl.GLES20.glUniform1f;
 import static android.opengl.GLES20.glUniform1i;
+import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glVertexAttribPointer;
 import static android.opengl.GLES20.glViewport;
+import static com.createchance.simplevideoeditor.gles.OpenGlUtil.ShaderParam.TYPE_UNIFORM;
 
 /**
  * ${DESC}
@@ -25,12 +27,12 @@ import static android.opengl.GLES20.glViewport;
  * @date 2018/6/3
  */
 public class VideoFrameLookupFilter extends AbstractFilter {
-
     // Attribute
     private final String A_POSITION = "a_Position";
     private final String A_TEXTURE_COORDINATES = "a_InputTextureCoordinate";
 
     // Uniform
+    private final String U_MATRIX = "u_Matrix";
     private final String U_INPUT_IMAGE_TEXTURE = "u_InputImageTexture";
     private final String U_CURVE = "u_Curve";
     private final String U_STRENGTH = "u_Strength";
@@ -58,6 +60,10 @@ public class VideoFrameLookupFilter extends AbstractFilter {
                 OpenGlUtil.ShaderParam.TYPE_ATTRIBUTE,
                 A_TEXTURE_COORDINATES
         ));
+        shaderParamMap.put(U_MATRIX, new OpenGlUtil.ShaderParam(
+                TYPE_UNIFORM,
+                U_MATRIX)
+        );
         shaderParamMap.put(U_INPUT_IMAGE_TEXTURE, new OpenGlUtil.ShaderParam(
                 OpenGlUtil.ShaderParam.TYPE_UNIFORM,
                 U_INPUT_IMAGE_TEXTURE
@@ -78,25 +84,31 @@ public class VideoFrameLookupFilter extends AbstractFilter {
 
         vertexPositionBuffer = OpenGlUtil.getFloatBuffer(
                 new float[]{
-                        -1.0f, -1.0f,
-                        1.0f, -1.0f,
                         -1.0f, 1.0f,
+                        -1.0f, -1.0f,
                         1.0f, 1.0f,
+                        1.0f, -1.0f,
                 },
                 BYTES_PER_FLOAT
         );
         // default rotation is 0 degree
         textureCoordinateBuffer = OpenGlUtil.getFloatBuffer(
                 new float[]{
-                        0.0f, 1.0f,
-                        1.0f, 1.0f,
                         0.0f, 0.0f,
+                        0.0f, 1.0f,
                         1.0f, 0.0f,
+                        1.0f, 1.0f,
                 },
                 BYTES_PER_FLOAT
         );
 
         // set uniform var
+        glUniformMatrix4fv(
+                shaderParamMap.get(U_MATRIX).location,
+                1,
+                false,
+                OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(), false, true),
+                0);
         glUniform1f(shaderParamMap.get(U_STRENGTH).location, strength);
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, OpenGlUtil.loadTexture(curve));

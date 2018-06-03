@@ -30,7 +30,7 @@ public class WaterMarkFilter extends NoFilter {
     protected void onInitDone() {
         super.onInitDone();
         //对画面进行矩阵旋转
-//        setUMatrix(OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(),false,true));
+        setUMatrix(OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(),false,true));
 
         setInputTextureId(OpenGlUtil.loadTexture(watermark));
     }
