@@ -47,7 +47,7 @@ public class VideoFrameDrawer {
     private int rotation;
 
     private int[] fboFrame = new int[1];
-    private int[] fboTexture = new int[1];
+    private int[] fboTexture = new int[2];
 
     private boolean capture = true;
 
@@ -85,28 +85,40 @@ public class VideoFrameDrawer {
         }
 
         mShow.setViewSize(surfaceWidth, surfaceHeight);
-        mShow.setInputTextureId(fboTexture[0]);
+        mShow.setInputTextureId(fboTexture[1]);
     }
 
     public void draw() {
         surfaceTexture.updateTexImage();
-        bindFrameBuffer();
+
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
+        bindFrameBuffer(0);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         mOesFilter.draw();
 
-        if (waterMarkFilter != null) {
-            waterMarkFilter.draw();
-        }
+        unbindFrameBuffer();
+
+        bindFrameBuffer(1);
+
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         if (videoFrameLookupFilter != null) {
             videoFrameLookupFilter.draw();
         }
 
+        if (waterMarkFilter != null) {
+            waterMarkFilter.draw();
+        }
+
         unbindFrameBuffer();
         mShow.draw();
+        OpenGlUtil.assertNoError("onDrawFrame");
         if (capture) {
             try {
                 OpenGlUtil.captureImage(surfaceWidth, surfaceHeight);
@@ -115,7 +127,6 @@ public class VideoFrameDrawer {
                 e.printStackTrace();
             }
         }
-        OpenGlUtil.assertNoError("onDrawFrame");
     }
 
     public SurfaceTexture getSurfaceTexture() {
@@ -149,27 +160,29 @@ public class VideoFrameDrawer {
 
     private void createFrameBuffer() {
         GLES20.glGenFramebuffers(1, fboFrame, 0);
-        GLES20.glGenTextures(1, fboTexture, 0);
-        // bind to fbo texture cause we are going to do setting.
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fboTexture[0]);
-        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, surfaceWidth, surfaceHeight,
-                0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
-        // 设置缩小过滤为使用纹理中坐标最接近的一个像素的颜色作为需要绘制的像素颜色
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-        // 设置放大过滤为使用纹理中坐标最接近的若干个颜色，通过加权平均算法得到需要绘制的像素颜色
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-        // 设置环绕方向S，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-        // 设置环绕方向T，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-        // unbind fbo texture.
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+        GLES20.glGenTextures(fboTexture.length, fboTexture, 0);
+        for (int i = 0; i < fboTexture.length; i++) {
+            // bind to fbo texture cause we are going to do setting.
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fboTexture[i]);
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, surfaceWidth, surfaceHeight,
+                    0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
+            // 设置缩小过滤为使用纹理中坐标最接近的一个像素的颜色作为需要绘制的像素颜色
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+            // 设置放大过滤为使用纹理中坐标最接近的若干个颜色，通过加权平均算法得到需要绘制的像素颜色
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+            // 设置环绕方向S，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            // 设置环绕方向T，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+            // unbind fbo texture.
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+        }
     }
 
-    private void bindFrameBuffer() {
+    private void bindFrameBuffer(int index) {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboFrame[0]);
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
-                GLES20.GL_TEXTURE_2D, fboTexture[0], 0);
+                GLES20.GL_TEXTURE_2D, fboTexture[index], 0);
     }
 
     private void unbindFrameBuffer() {

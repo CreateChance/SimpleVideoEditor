@@ -6,6 +6,7 @@ import android.opengl.GLES20;
 import java.nio.FloatBuffer;
 
 import static android.opengl.GLES20.GL_TEXTURE0;
+import static android.opengl.GLES20.GL_TEXTURE1;
 import static android.opengl.GLES20.GL_TEXTURE3;
 import static android.opengl.GLES20.GL_TEXTURE_2D;
 import static android.opengl.GLES20.glActiveTexture;
@@ -42,6 +43,8 @@ public class VideoFrameLookupFilter extends AbstractFilter {
 
     private Bitmap curve;
     private float strength;
+
+    private int curveTextureId;
 
     public VideoFrameLookupFilter(Bitmap curve, float strength) {
         super(Shaders.BASE_VIDEO_FRAME_LOOKUP_VERTEX_SHADER,
@@ -110,9 +113,10 @@ public class VideoFrameLookupFilter extends AbstractFilter {
                 OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(), false, true),
                 0);
         glUniform1f(shaderParamMap.get(U_STRENGTH).location, strength);
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, OpenGlUtil.loadTexture(curve));
-        glUniform1i(shaderParamMap.get(U_CURVE).location, 3);
+        glActiveTexture(GL_TEXTURE1);
+        curveTextureId = OpenGlUtil.loadTexture(curve);
+        glBindTexture(GL_TEXTURE_2D, curveTextureId);
+        glUniform1i(shaderParamMap.get(U_CURVE).location, 1);
     }
 
     @Override
@@ -136,6 +140,16 @@ public class VideoFrameLookupFilter extends AbstractFilter {
                 false,
                 2 * BYTES_PER_FLOAT,
                 textureCoordinateBuffer);
+
+        // bind textures
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, inputTextureId);
+        glUniform1i(shaderParamMap.get(U_INPUT_IMAGE_TEXTURE).location, 0);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, curveTextureId);
+        glUniform1i(shaderParamMap.get(U_CURVE).location, 1);
+
         glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
         glDisableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
