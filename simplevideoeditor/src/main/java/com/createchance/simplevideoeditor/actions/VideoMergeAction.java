@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.createchance.simplevideoeditor.Constants;
 import com.createchance.simplevideoeditor.Logger;
+import com.createchance.simplevideoeditor.VideoUtil;
 import com.createchance.simplevideoeditor.WorkRunner;
 
 import java.io.File;
@@ -98,6 +99,7 @@ public class VideoMergeAction extends AbstractAction {
 
         private void prepare() throws IOException {
             mediaMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            mediaMuxer.setOrientationHint(VideoUtil.getVideoRotation(mInputFile));
         }
 
         private void merge() throws IOException {

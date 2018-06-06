@@ -11,6 +11,7 @@ import android.os.Build;
 
 import com.createchance.simplevideoeditor.Constants;
 import com.createchance.simplevideoeditor.Logger;
+import com.createchance.simplevideoeditor.VideoUtil;
 import com.createchance.simplevideoeditor.WorkRunner;
 
 import java.io.File;
@@ -291,6 +292,7 @@ public class VideoBgmAddAction extends AbstractAction {
             MediaFormat audioFormat = null;
             mediaMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(),
                     MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            mediaMuxer.setOrientationHint(VideoUtil.getVideoRotation(mInputFile));
 
             sourceExtractor = new MediaExtractor();
             sourceExtractor.setDataSource(mInputFile.getAbsolutePath());

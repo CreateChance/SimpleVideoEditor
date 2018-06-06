@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.createchance.simplevideoeditor.Constants;
 import com.createchance.simplevideoeditor.Logger;
+import com.createchance.simplevideoeditor.VideoUtil;
 import com.createchance.simplevideoeditor.WorkRunner;
 
 import java.io.File;
@@ -121,6 +122,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
             mMediaExtractor = new MediaExtractor();
             mMediaExtractor.setDataSource(mInputFile.getAbsolutePath());
             mMediaMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            mMediaMuxer.setOrientationHint(VideoUtil.getVideoRotation(mInputFile));
         }
 
         private void removeBgm() {

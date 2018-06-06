@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.createchance.simplevideoeditor.Constants;
 import com.createchance.simplevideoeditor.Logger;
+import com.createchance.simplevideoeditor.VideoUtil;
 import com.createchance.simplevideoeditor.WorkRunner;
 
 import java.io.File;
@@ -124,6 +125,7 @@ public class VideoCutAction extends AbstractAction {
             //  out put format is mp4
             mMediaMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(),
                     MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            mMediaMuxer.setOrientationHint(VideoUtil.getVideoRotation(mInputFile));
         }
 
         private void cut() {

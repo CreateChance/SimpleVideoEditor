@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.createchance.simplevideoeditor.Constants;
 import com.createchance.simplevideoeditor.Logger;
+import com.createchance.simplevideoeditor.VideoUtil;
 import com.createchance.simplevideoeditor.WorkRunner;
 import com.createchance.simplevideoeditor.gles.InputSurface;
 import com.createchance.simplevideoeditor.gles.OutputSurface;
@@ -171,6 +172,7 @@ public class VideoFilterAddAction extends AbstractAction {
 
             // init media muxer
             mediaMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            mediaMuxer.setOrientationHint(VideoUtil.getVideoRotation(mInputFile));
 
             // init media extractor
             mediaExtractor = new MediaExtractor();
