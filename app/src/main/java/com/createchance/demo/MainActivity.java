@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
         VideoFilterAddAction filterAddAction = new VideoFilterAddAction.Builder()
                 .watermarkFilter(new WaterMarkFilter(BitmapFactory.decodeResource(getResources(), R.drawable.watermark), 100, 200, 1))
-                .frameFilter(new VideoFrameLookupFilter(BitmapFactory.decodeResource(getResources(), R.drawable.filter), 1))
+                .frameFilter(new VideoFrameLookupFilter(BitmapFactory.decodeResource(getResources(), R.drawable.filter7), 0.5f))
                 .build();
         VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
                 .bgmFile(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
