@@ -130,6 +130,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
             int inAudioTrackId = -1;
             int outVideoTrackId = -1;
             int outAudioTrackId = -1;
+            long videoDuration = VideoUtil.getVideoDuration(mInputFile);
             MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
             for (int i = 0; i < mMediaExtractor.getTrackCount(); i++) {
                 MediaFormat mediaFormat = mMediaExtractor.getTrackFormat(i);
@@ -166,6 +167,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
             // handle video track first, just write all video data to result.
             mMediaExtractor.selectTrack(inVideoTrackId);
             while (true) {
+                onProgress(bufferInfo.presentationTimeUs * 0.5f / (videoDuration * 1000));
                 int sampleSize = mMediaExtractor.readSampleData(byteBuffer, 0);
                 Log.d(TAG, "removeBgm, read data: " + sampleSize);
                 if (sampleSize > 0) {
@@ -186,6 +188,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
                 mMediaExtractor.unselectTrack(inVideoTrackId);
                 mMediaExtractor.selectTrack(inAudioTrackId);
                 while (true) {
+                    onProgress((bufferInfo.presentationTimeUs * 0.5f / (videoDuration * 1000)) + 0.5f);
                     int sampleSize = mMediaExtractor.readSampleData(byteBuffer, 0);
                     if (sampleSize > 0) {
                         bufferInfo.size = sampleSize;
@@ -212,6 +215,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
             }
 
             Log.d(TAG, "removeBgm done!!");
+            onProgress(1f);
             onSucceeded();
         }
 

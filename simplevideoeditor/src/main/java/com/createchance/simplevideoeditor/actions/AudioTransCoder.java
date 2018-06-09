@@ -540,8 +540,15 @@ class AudioTransCoder {
                     outputBuffer.get(outData, 7, info.size);
                     encoder.releaseOutputBuffer(outIndex, false);
                     mOutput.write(outData);
+                    if (mCallback != null) {
+                        mCallback.onProgress((info.presentationTimeUs - mStartPosMs * 1000) * 1f /
+                                (mDurationMs * 1000));
+                    }
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                         Log.d(TAG, "Encode output reach eos.");
+                        if (mCallback != null) {
+                            mCallback.onProgress(1f);
+                        }
                         break;
                     }
                 }
@@ -563,8 +570,15 @@ class AudioTransCoder {
                     outputBuffer.get(outData, 7, info.size);
                     encoder.releaseOutputBuffer(outIndex, false);
                     mOutput.write(outData);
+                    if (mCallback != null) {
+                        mCallback.onProgress((info.presentationTimeUs - mStartPosMs * 1000) * 1f /
+                                (mDurationMs * 1000));
+                    }
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                         Log.d(TAG, "Encode output reach eos.");
+                        if (mCallback != null) {
+                            mCallback.onProgress(1f);
+                        }
                         break;
                     }
                 }

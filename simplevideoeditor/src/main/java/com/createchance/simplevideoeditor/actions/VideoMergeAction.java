@@ -75,6 +75,8 @@ public class VideoMergeAction extends AbstractAction {
             try {
                 if (checkRational()) {
                     prepare();
+                    // add input video file to merge list.
+                    mMergeFiles.add(0, mInputFile);
                     merge();
                 } else {
                     Logger.e(TAG, "Action params error.");
@@ -103,6 +105,7 @@ public class VideoMergeAction extends AbstractAction {
         }
 
         private void merge() throws IOException {
+            long totalDuration = 0;
             // 首先找到视频列表中的视频媒体信息
             // TODO: 目前是匹配第一个找到的媒体信息
             for (File video : mMergeFiles) {
@@ -121,6 +124,10 @@ public class VideoMergeAction extends AbstractAction {
                         break;
                     }
                 }
+            }
+
+            for (File video : mMergeFiles) {
+                totalDuration += VideoUtil.getVideoDuration(video);
             }
 
             if (videoFormat == null && audioFormat == null) {
@@ -144,6 +151,7 @@ public class VideoMergeAction extends AbstractAction {
                 audioExtractor.setDataSource(video.getAbsolutePath());
                 long videoPts = 0;
                 long audioPts = 0;
+                long currentTime = ptsOffset;
 
                 int inVideoTrackId = -1;
                 int inAudioTrackId = -1;
@@ -167,6 +175,7 @@ public class VideoMergeAction extends AbstractAction {
                 Log.d(TAG, "++++++++++++++++++++++++++++++++++++++merge start, file: " + video);
 
                 while (true) {
+                    onProgress(currentTime * 1.0f / (totalDuration * 1000));
                     if (inVideoTrackId == -1 && inAudioTrackId == -1) {
                         break;
                     }
@@ -178,8 +187,9 @@ public class VideoMergeAction extends AbstractAction {
                             info.offset = 0;
                             info.size = sampleSize;
                             videoPts = videoExtractor.getSampleTime();
-                            info.presentationTimeUs = ptsOffset + videoPts;
-                            info.flags = MediaCodec.BUFFER_FLAG_SYNC_FRAME;
+                            currentTime = ptsOffset + videoPts;
+                            info.presentationTimeUs = currentTime;
+                            info.flags = videoExtractor.getSampleFlags();
                             mediaMuxer.writeSampleData(outVideoTrackId, byteBuffer, info);
                             videoExtractor.advance();
                         } else {
@@ -196,8 +206,9 @@ public class VideoMergeAction extends AbstractAction {
                             info.offset = 0;
                             info.size = sampleSize;
                             audioPts = audioExtractor.getSampleTime();
-                            info.presentationTimeUs = ptsOffset + audioPts;
-                            info.flags = MediaCodec.BUFFER_FLAG_SYNC_FRAME;
+                            currentTime = ptsOffset + audioPts;
+                            info.presentationTimeUs = currentTime;
+                            info.flags = audioExtractor.getSampleFlags();
                             mediaMuxer.writeSampleData(outAudioTrackId, byteBuffer, info);
                             audioExtractor.advance();
                         } else {
@@ -216,6 +227,7 @@ public class VideoMergeAction extends AbstractAction {
 
             Log.d(TAG, "###############################################merge done!");
 
+            onProgress(1f);
             onSucceeded();
         }
 

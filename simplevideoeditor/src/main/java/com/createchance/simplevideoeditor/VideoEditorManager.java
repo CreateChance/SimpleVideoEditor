@@ -2,6 +2,10 @@ package com.createchance.simplevideoeditor;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 
 import com.createchance.simplevideoeditor.actions.AbstractAction;
 
@@ -24,8 +28,60 @@ public class VideoEditorManager {
 
     private Editor mCurrentEditor;
 
-    private VideoEditorManager() {
+    private final int MSG_ON_START = 100;
+    private final int MSG_ON_PROGRESS = 101;
+    private final int MSG_ON_SUCCEED = 102;
+    private final int MSG_ON_FAILED = 103;
+    private final int MSG_ON_ALL_SUCCEED = 104;
+    private final String KEY_ACTION = "action";
+    private final String KEY_PROGRESS = "progress";
+    private Handler mMainHandler;
 
+    private VideoEditorManager() {
+        mMainHandler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                Bundle params = msg.getData();
+                switch (msg.what) {
+                    case MSG_ON_START:
+                        if (mCurrentEditor.mCallback != null) {
+                            mCurrentEditor.mCallback.onStart(params.getString(KEY_ACTION));
+                        }
+                        break;
+                    case MSG_ON_PROGRESS:
+                        if (mCurrentEditor.mCallback != null) {
+                            mCurrentEditor.mCallback.onProgress(params.getString(KEY_ACTION),
+                                    params.getFloat(KEY_PROGRESS));
+                        }
+                        break;
+                    case MSG_ON_SUCCEED:
+                        if (mCurrentEditor.mCallback != null) {
+                            mCurrentEditor.mCallback.onSucceeded(params.getString(KEY_ACTION));
+                        }
+                        break;
+                    case MSG_ON_FAILED:
+                        // clean all the tmp files.
+                        for (AbstractAction act : mCurrentEditor.actionList) {
+                            act.release();
+                        }
+
+                        if (mCurrentEditor.mCallback != null) {
+                            mCurrentEditor.mCallback.onFailed(params.getString(KEY_ACTION));
+                        }
+                        break;
+                    case MSG_ON_ALL_SUCCEED:
+                        // clean all the tmp files.
+                        for (AbstractAction act : mCurrentEditor.actionList) {
+                            act.release();
+                        }
+                        mCurrentEditor = null;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
     }
 
     public synchronized static VideoEditorManager getManager() {
@@ -59,45 +115,53 @@ public class VideoEditorManager {
                 null : mCurrentEditor.outputFile.getParentFile();
     }
 
-    public  File getOutputFile() {
+    public File getOutputFile() {
         return mCurrentEditor == null ? null : mCurrentEditor.outputFile;
     }
 
     public void onStart(String action) {
-        if (mCurrentEditor.mCallback != null) {
-            mCurrentEditor.mCallback.onStart(action);
-        }
+        Message message = Message.obtain();
+        Bundle params = new Bundle();
+        params.putString(KEY_ACTION, action);
+        message.what = MSG_ON_START;
+        message.setData(params);
+        mMainHandler.sendMessage(message);
     }
 
     public void onProgress(String action, float progress) {
-        if (mCurrentEditor.mCallback != null) {
-            mCurrentEditor.mCallback.onProgress(action, progress);
-        }
+        Message message = Message.obtain();
+        Bundle params = new Bundle();
+        params.putString(KEY_ACTION, action);
+        params.putFloat(KEY_PROGRESS, progress);
+        message.what = MSG_ON_PROGRESS;
+        message.setData(params);
+        mMainHandler.sendMessage(message);
     }
 
     public void onSucceed(String action) {
-        if (mCurrentEditor.mCallback != null) {
-            mCurrentEditor.mCallback.onSucceeded(action);
-        }
+        Message message = Message.obtain();
+        Bundle params = new Bundle();
+        params.putString(KEY_ACTION, action);
+        message.what = MSG_ON_SUCCEED;
+        message.setData(params);
+        mMainHandler.sendMessage(message);
     }
 
     public void onAllSucceed() {
-        // clean all the tmp files.
-        for (AbstractAction act : mCurrentEditor.actionList) {
-            act.release();
-        }
-        mCurrentEditor = null;
+        Message message = Message.obtain();
+        Bundle params = new Bundle();
+        message.what = MSG_ON_ALL_SUCCEED;
+        message.setData(params);
+        mMainHandler.sendMessage(message);
     }
 
     public void onFailed(String action) {
-        // clean all the tmp files.
-        for (AbstractAction act : mCurrentEditor.actionList) {
-            act.release();
-        }
-
-        if (mCurrentEditor.mCallback != null) {
-            mCurrentEditor.mCallback.onFailed(action);
-        }
+        Message message = Message.obtain();
+        Bundle params = new Bundle();
+        params.putString(KEY_ACTION, action);
+        message.what = MSG_ON_FAILED;
+        message.setData(params);
+        mMainHandler.sendMessage(message);
     }
 
     public static class Editor {

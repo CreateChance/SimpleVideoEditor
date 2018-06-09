@@ -13,4 +13,13 @@ public class VideoUtil {
         retriever.release();
         return rotation;
     }
+
+    public static long getVideoDuration(File video) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(video.getAbsolutePath());
+        long duration = Long.valueOf(
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+        retriever.release();
+        return duration;
+    }
 }

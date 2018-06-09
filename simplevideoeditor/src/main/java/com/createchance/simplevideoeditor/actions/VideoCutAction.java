@@ -3,7 +3,6 @@ package com.createchance.simplevideoeditor.actions;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
 import android.util.Log;
 
@@ -95,17 +94,19 @@ public class VideoCutAction extends AbstractAction {
             if (mInputFile != null &&
                     mInputFile.exists() &&
                     mInputFile.isFile() &&
-                    mOutputFile != null) {
+                    mOutputFile != null &&
+                    mCutStartPosMs >= 0 &&
+                    mCutDurationMs >= 0) {
 
-                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-                mediaMetadataRetriever.setDataSource(mInputFile.getAbsolutePath());
-                long duration = Long.valueOf(mediaMetadataRetriever.
-                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-                mediaMetadataRetriever.release();
+                long duration = VideoUtil.getVideoDuration(mInputFile);
 
-                if (mCutStartPosMs + mCutDurationMs > duration) {
-                    Logger.e(TAG, "Video selected section is out of duration!");
-                    return false;
+                if (mCutDurationMs == 0) {
+                    mCutDurationMs = duration - mCutStartPosMs;
+                }
+
+                if ((mCutStartPosMs + mCutDurationMs) > duration) {
+                    Logger.w(TAG, "Video selected section is out of duration!");
+                    mCutDurationMs = duration - mCutStartPosMs;
                 }
 
                 if (mOutputFile.exists()) {
@@ -137,9 +138,6 @@ public class VideoCutAction extends AbstractAction {
             int inputVideoMaxSize = -1;
             int inputAudioMaxSize = -1;
 
-            long videoSampleTime = 0;
-            long audioSampleTime = 0;
-
             ByteBuffer byteBuffer;
             for (int i = 0; i < mMediaExtractor.getTrackCount(); i++) {
                 MediaFormat mediaFormat = mMediaExtractor.getTrackFormat(i);
@@ -150,15 +148,6 @@ public class VideoCutAction extends AbstractAction {
                     long duration = mediaFormat.getLong(MediaFormat.KEY_DURATION);
                     int height = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT);
                     int weight = mediaFormat.getInteger(MediaFormat.KEY_WIDTH);
-
-                    // check if pos is rational, only check video time info.
-                    if ((mCutStartPosMs + mCutDurationMs) * 1000 > duration) {
-                        Log.e(TAG, "Error! Duration: " + mCutDurationMs
-                                + " invalid! Video duration: " + duration);
-                        // delete output file.
-                        mOutputFile.delete();
-                        return;
-                    }
 
                     outputVideoTrackId = mMediaMuxer.addTrack(mediaFormat);
 
@@ -204,24 +193,12 @@ public class VideoCutAction extends AbstractAction {
             // first we handle video part.
             MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
             mMediaExtractor.selectTrack(inputVideoTrackId);
-
-            mMediaExtractor.readSampleData(byteBuffer, 0);
-            //skip first I frame
-            if (mMediaExtractor.getSampleFlags() == MediaExtractor.SAMPLE_FLAG_SYNC) {
-                mMediaExtractor.advance();
-            }
-            mMediaExtractor.readSampleData(byteBuffer, 0);
-            long firstVideoPTS = mMediaExtractor.getSampleTime();
-            mMediaExtractor.advance();
-            mMediaExtractor.readSampleData(byteBuffer, 0);
-            long secondVideoPTS = mMediaExtractor.getSampleTime();
-            videoSampleTime = Math.abs(secondVideoPTS - firstVideoPTS);
-            Log.d(TAG, "videoSampleTime is " + videoSampleTime);
-
             // select the nearest previous key frame to ensure all selected part will be in the result.
-            mMediaExtractor.seekTo(mCutStartPosMs * 1000, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
-            bufferInfo.presentationTimeUs = 0;
+            mMediaExtractor.seekTo(mCutStartPosMs * 1000, MediaExtractor.SEEK_TO_NEXT_SYNC);
+            bufferInfo.presentationTimeUs = mMediaExtractor.getSampleTime();
             while (true) {
+                onProgress((bufferInfo.presentationTimeUs - mCutStartPosMs * 1000) * 0.5f /
+                        (mCutDurationMs * 1000));
                 int sampleSize = mMediaExtractor.readSampleData(byteBuffer, 0);
                 if (sampleSize < 0) {
                     Log.d(TAG, "Reach video eos.");
@@ -229,16 +206,15 @@ public class VideoCutAction extends AbstractAction {
                     break;
                 }
 
-                long presentationTimeUs = mMediaExtractor.getSampleTime();
-                if (presentationTimeUs > mCutDurationMs * 1000) {
+                bufferInfo.size = sampleSize;
+                bufferInfo.presentationTimeUs = mMediaExtractor.getSampleTime();
+                bufferInfo.offset = 0;
+                bufferInfo.flags = mMediaExtractor.getSampleFlags();
+                if ((bufferInfo.presentationTimeUs - mCutStartPosMs * 1000) > mCutDurationMs * 1000) {
                     Log.d(TAG, "Reach video duration limitation.");
                     mMediaExtractor.unselectTrack(inputVideoTrackId);
                     break;
                 }
-                bufferInfo.size = sampleSize;
-                bufferInfo.presentationTimeUs += videoSampleTime;
-                bufferInfo.offset = 0;
-                bufferInfo.flags = mMediaExtractor.getSampleFlags();
                 mMediaMuxer.writeSampleData(outputVideoTrackId, byteBuffer, bufferInfo);
                 mMediaExtractor.advance();
             }
@@ -246,38 +222,25 @@ public class VideoCutAction extends AbstractAction {
             // Then handle audio track if input file have one.
             if (inputAudioTrackId != -1) {
                 mMediaExtractor.selectTrack(inputAudioTrackId);
-
-                mMediaExtractor.readSampleData(byteBuffer, 0);
-                //skip first sample
-                if (mMediaExtractor.getSampleTime() == 0) {
-                    mMediaExtractor.advance();
-                }
-                mMediaExtractor.readSampleData(byteBuffer, 0);
-                long firstAudioPTS = mMediaExtractor.getSampleTime();
-                mMediaExtractor.advance();
-                mMediaExtractor.readSampleData(byteBuffer, 0);
-                long secondAudioPTS = mMediaExtractor.getSampleTime();
-                audioSampleTime = Math.abs(secondAudioPTS - firstAudioPTS);
-                Log.d(TAG, "AudioSampleTime is " + audioSampleTime);
-
-                mMediaExtractor.seekTo(mCutStartPosMs * 1000, MediaExtractor.SEEK_TO_PREVIOUS_SYNC);
-                bufferInfo.presentationTimeUs = 0;
+                mMediaExtractor.seekTo(mCutStartPosMs * 1000, MediaExtractor.SEEK_TO_NEXT_SYNC);
+                bufferInfo.presentationTimeUs = mMediaExtractor.getSampleTime();
                 while (true) {
+                    onProgress(((bufferInfo.presentationTimeUs - mCutStartPosMs * 1000) * 0.5f /
+                            (mCutDurationMs * 1000)) + 0.5f);
                     int sampleSize = mMediaExtractor.readSampleData(byteBuffer, 0);
                     if (sampleSize < 0) {
                         Log.d(TAG, "Reach audio eos.");
                         break;
                     }
 
-                    long presentationTimeUs = mMediaExtractor.getSampleTime();
-                    if (presentationTimeUs > mCutDurationMs * 1000) {
+                    bufferInfo.size = sampleSize;
+                    bufferInfo.presentationTimeUs = mMediaExtractor.getSampleTime();
+                    bufferInfo.offset = 0;
+                    bufferInfo.flags = mMediaExtractor.getSampleFlags();
+                    if ((bufferInfo.presentationTimeUs - mCutStartPosMs * 1000) > mCutDurationMs * 1000) {
                         Log.d(TAG, "Reach audio duration limitation.");
                         break;
                     }
-                    bufferInfo.size = sampleSize;
-                    bufferInfo.presentationTimeUs += audioSampleTime;
-                    bufferInfo.offset = 0;
-                    bufferInfo.flags = mMediaExtractor.getSampleFlags();
                     mMediaMuxer.writeSampleData(outputAudioTrackId, byteBuffer, bufferInfo);
                     mMediaExtractor.advance();
                 }
@@ -285,6 +248,7 @@ public class VideoCutAction extends AbstractAction {
 
             Log.d(TAG, "Cut file :" + mInputFile + " done!");
 
+            onProgress(1f);
             onSucceeded();
         }
 

@@ -5,7 +5,6 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
 import android.os.Build;
 
@@ -87,8 +86,8 @@ public class VideoBgmAddAction extends AbstractAction {
         }
     }
 
-    private void addAacBgm(File bgmfile, boolean deleteAfteruse) {
-        AacBgmAddWorker aacBgmAddWorker = new AacBgmAddWorker(bgmfile, deleteAfteruse);
+    private void addAacBgm(File bgmFile, boolean deleteAfterUse) {
+        AacBgmAddWorker aacBgmAddWorker = new AacBgmAddWorker(bgmFile, deleteAfterUse);
         WorkRunner.addTaskToBackground(aacBgmAddWorker);
     }
 
@@ -102,7 +101,7 @@ public class VideoBgmAddAction extends AbstractAction {
                 .start(new AudioTransCoder.Callback() {
                     @Override
                     public void onProgress(float progress) {
-
+                        VideoBgmAddAction.this.onProgress(progress * 0.5f);
                     }
 
                     @Override
@@ -242,27 +241,26 @@ public class VideoBgmAddAction extends AbstractAction {
                     mBgmDurationMs >= 0) {
 
                 // get duration of video.
-                MediaMetadataRetriever videoRetriever = new MediaMetadataRetriever();
-                videoRetriever.setDataSource(mInputFile.getAbsolutePath());
-                long videoDuration = Long.valueOf(videoRetriever.
-                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-                videoRetriever.release();
+                long videoDuration = VideoUtil.getVideoDuration(mInputFile);
 
                 // get duration of bgm file.
-                MediaMetadataRetriever bgmRetriever = new MediaMetadataRetriever();
-                bgmRetriever.setDataSource(mBgmFile.getAbsolutePath());
-                long bgmDuration = Long.valueOf(bgmRetriever.
-                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-                bgmRetriever.release();
+                long bgmDuration = VideoUtil.getVideoDuration(mBgmFile);
+
+                if (mVideoStartPosMs > videoDuration || mBgmStartPosMs > bgmDuration) {
+                    Logger.e(TAG, "Start position is out of duration!");
+                    return false;
+                }
 
                 if ((mVideoStartPosMs + mVideoDurationMs) > videoDuration) {
-                    Logger.e(TAG, "Video selected section is out of duration!");
-                    return false;
+                    Logger.w(TAG, "Video selected section is out of duration!");
+                    // adjust it.
+                    mVideoDurationMs = videoDuration - mVideoStartPosMs;
                 }
 
                 if ((mBgmStartPosMs + mBgmDurationMs) > bgmDuration) {
                     Logger.e(TAG, "Bgm selected section is out of duration!");
-                    return false;
+                    // adjust it
+                    mBgmDurationMs = bgmDuration - mBgmStartPosMs;
                 }
 
                 long remainVideoDuration = videoDuration - mVideoStartPosMs;
@@ -357,11 +355,13 @@ public class VideoBgmAddAction extends AbstractAction {
         }
 
         private void addBgm() {
+            long videoDuration = VideoUtil.getVideoDuration(mInputFile);
             // handle video first
             if (inVideoTrackId != -1) {
                 Logger.d(TAG, "Write source video track first.");
                 sourceExtractor.selectTrack(inVideoTrackId);
                 while (true) {
+                    onProgress((bufferInfo.presentationTimeUs * 0.25f / (videoDuration * 1000)) + 0.5f);
                     int videoSampleSize = sourceExtractor.readSampleData(sourceBuffer, 0);
                     if (videoSampleSize < 0) {
                         Logger.d(TAG, "Reach source video eos.");
@@ -403,6 +403,8 @@ public class VideoBgmAddAction extends AbstractAction {
                     bufferInfo.presentationTimeUs = sourceExtractor.getSampleTime();
                     // next frame
                     sourceExtractor.advance();
+
+                    onProgress((bufferInfo.presentationTimeUs * 0.25f / (videoDuration * 1000)) + 0.75f);
 
                     if (!reachBgmEnd &&
                             bufferInfo.presentationTimeUs >= mVideoStartPosMs * 1000 &&
@@ -446,6 +448,7 @@ public class VideoBgmAddAction extends AbstractAction {
                 }
             }
 
+            onProgress(1f);
             Logger.d(TAG, "addBgm done!");
         }
 

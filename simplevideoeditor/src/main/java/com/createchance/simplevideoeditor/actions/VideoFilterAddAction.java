@@ -107,6 +107,7 @@ public class VideoFilterAddAction extends AbstractAction {
         MediaCodec encoder;
         MediaExtractor mediaExtractor;
         MediaMuxer mediaMuxer;
+        long durationUs;
         int inputAudioTrackId = -1;
         int inputVideoTrackId = -1;
         int outputAudioTrackId = -1;
@@ -169,6 +170,8 @@ public class VideoFilterAddAction extends AbstractAction {
             retriever.setDataSource(mInputFile.getAbsolutePath());
             videoWidth = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
             videoHeight = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+            durationUs = Long.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)) * 1000;
+            retriever.release();
 
             // init media muxer
             mediaMuxer = new MediaMuxer(mOutputFile.getAbsolutePath(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
@@ -232,6 +235,7 @@ public class VideoFilterAddAction extends AbstractAction {
                 ByteBuffer audioBuffer = ByteBuffer.allocate(512 * 1024);
                 MediaCodec.BufferInfo audioInfo = new MediaCodec.BufferInfo();
                 while (true) {
+                    onProgress(audioInfo.presentationTimeUs * 0.5f / durationUs);
                     int sampleSize = mediaExtractor.readSampleData(audioBuffer, 0);
                     if (sampleSize == -1) {
                         Log.d(TAG, "addWatermark, read end of audio.");
@@ -329,6 +333,7 @@ public class VideoFilterAddAction extends AbstractAction {
                         ByteBuffer buffer = encodeOutputBuffers[encodeOutputBufferId];
                         mediaMuxer.writeSampleData(outputVideoTrackId, buffer, encodeInfo);
                         encoder.releaseOutputBuffer(encodeOutputBufferId, false);
+                        onProgress((encodeInfo.presentationTimeUs * 0.5f / durationUs) + 0.5f);
                     }
                 }
 
@@ -338,6 +343,7 @@ public class VideoFilterAddAction extends AbstractAction {
                 }
             }
 
+            onProgress(1f);
             onSucceeded();
         }
 

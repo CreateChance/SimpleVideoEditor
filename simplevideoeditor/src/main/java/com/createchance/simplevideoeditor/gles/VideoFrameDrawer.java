@@ -49,8 +49,6 @@ public class VideoFrameDrawer {
     private int[] fboFrame = new int[1];
     private int[] fboTexture = new int[2];
 
-    private boolean capture = true;
-
     public VideoFrameDrawer() {
         mOesFilter = new OesFilter();
         mShow = new NoFilter();
@@ -118,15 +116,6 @@ public class VideoFrameDrawer {
 
         unbindFrameBuffer();
         mShow.draw();
-        OpenGlUtil.assertNoError("onDrawFrame");
-        if (capture) {
-            try {
-                OpenGlUtil.captureImage(surfaceWidth, surfaceHeight);
-                capture = false;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public SurfaceTexture getSurfaceTexture() {
