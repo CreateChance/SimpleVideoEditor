@@ -4,10 +4,10 @@ package com.createchance.simplevideoeditor;
  * ${DESC}
  *
  * @author gaochao1-iri
- * @date 03/05/2018
+ * @date 2018/6/10
  */
-public class VideoEditCallback {
-    private static final String TAG = VideoEditCallback.class.getSimpleName();
+public class EditStageListener {
+    private static final String TAG = "EditStageListener";
 
     public void onStart(String action) {
         Logger.d(TAG, "Action: " + action + " started.");

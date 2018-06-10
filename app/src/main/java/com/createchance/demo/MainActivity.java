@@ -9,7 +9,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.createchance.simplevideoeditor.Constants;
-import com.createchance.simplevideoeditor.VideoEditCallback;
+import com.createchance.simplevideoeditor.EditListener;
+import com.createchance.simplevideoeditor.EditStageListener;
 import com.createchance.simplevideoeditor.VideoEditorManager;
 import com.createchance.simplevideoeditor.actions.VideoBgmAddAction;
 import com.createchance.simplevideoeditor.actions.VideoBgmRemoveAction;
@@ -27,6 +28,66 @@ public class MainActivity extends AppCompatActivity {
     private TextView mActionView;
     private TextView mProgressView;
     private long mToken = -1;
+
+    private EditStageListener mStageListener = new EditStageListener() {
+        @Override
+        public void onStart(String action) {
+            super.onStart(action);
+            Log.d(TAG, "EditStageListener, onStart: " + action);
+            mActionView.setText(action + ": started");
+        }
+
+        @Override
+        public void onProgress(String action, float progress) {
+            super.onProgress(action, progress);
+            Log.d(TAG, "EditStageListener, onProgress: " + action + ", progress: " + progress);
+            mActionView.setText(action + ": progress");
+            mProgressView.setText(String.format("%.2f", progress * 100));
+        }
+
+        @Override
+        public void onSucceeded(String action) {
+            super.onSucceeded(action);
+            Log.d(TAG, "EditStageListener, onSucceeded: " + action);
+            mActionView.setText(action + ": succeed");
+            if (Constants.ACTION_MERGE_VIDEOS.equals(action)) {
+                mToken = -1;
+            }
+        }
+
+        @Override
+        public void onFailed(String action) {
+            super.onFailed(action);
+            Log.d(TAG, "EditStageListener, onFailed: " + action);
+            mActionView.setText(action + ": failed");
+        }
+    };
+
+    private EditListener mEditListener = new EditListener() {
+        @Override
+        public void onStart(long token) {
+            super.onStart(token);
+            Log.d(TAG, "EditListener, onStart token: " + token);
+        }
+
+        @Override
+        public void onProgress(long token, float progress) {
+            super.onProgress(token, progress);
+            Log.d(TAG, "EditListener, onProgress: " + progress + ", token: " + token);
+        }
+
+        @Override
+        public void onSucceeded(long token, File outputFile) {
+            super.onSucceeded(token, outputFile);
+            Log.d(TAG, "EditListener, onSucceeded token: " + token + ", output: " + outputFile);
+        }
+
+        @Override
+        public void onFailed(long token) {
+            super.onFailed(token);
+            Log.d(TAG, "EditListener, onFailed token: " + token);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,39 +155,7 @@ public class MainActivity extends AppCompatActivity {
                 .withAction(bgmRemoveAction)
                 .withAction(mergeAction)
                 .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/output.mp4"))
-                .commit(new VideoEditCallback() {
-                    @Override
-                    public void onStart(String action) {
-                        super.onStart(action);
-                        Log.d(TAG, "onStart: " + action);
-                        mActionView.setText(action + ": started");
-                    }
-
-                    @Override
-                    public void onProgress(String action, float progress) {
-                        super.onProgress(action, progress);
-                        Log.d(TAG, "onProgress: " + action + ", progress: " + progress);
-                        mActionView.setText(action + ": progress");
-                        mProgressView.setText(String.format("%.2f", progress * 100));
-                    }
-
-                    @Override
-                    public void onSucceeded(String action) {
-                        super.onSucceeded(action);
-                        Log.d(TAG, "onSucceeded: " + action);
-                        mActionView.setText(action + ": succeed");
-                        if (Constants.ACTION_MERGE_VIDEOS.equals(action)) {
-                            mToken = -1;
-                        }
-                    }
-
-                    @Override
-                    public void onFailed(String action) {
-                        super.onFailed(action);
-                        Log.d(TAG, "onFailed: " + action);
-                        mActionView.setText(action + ": failed");
-                    }
-                });
+                .commit(mEditListener, mStageListener);
     }
 
     public void cancel(View view) {

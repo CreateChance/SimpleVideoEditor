@@ -32,8 +32,14 @@ public class VideoEditorManager {
     private final int MSG_ON_PROGRESS = 101;
     private final int MSG_ON_SUCCEED = 102;
     private final int MSG_ON_FAILED = 103;
+
+    private final int MSG_ON_STAGE_START = 200;
+    private final int MSG_ON_STAGE_PROGRESS = 201;
+    private final int MSG_ON_STAGE_SUCCEED = 202;
+    private final int MSG_ON_STAGE_FAILED = 203;
     private final String KEY_TOKEN = "token";
     private final String KEY_ACTION = "action";
+    private final String KEY_STAGE_PROGRESS = "stage_progress";
     private final String KEY_PROGRESS = "progress";
     private Handler mMainHandler;
 
@@ -54,30 +60,50 @@ public class VideoEditorManager {
                     return;
                 }
                 switch (msg.what) {
+                    case MSG_ON_STAGE_START:
+                        if (editor.mEditStageListener != null) {
+                            editor.mEditStageListener.onStart(params.getString(KEY_ACTION));
+                        }
+                        break;
                     case MSG_ON_START:
-                        if (editor.mCallback != null) {
-                            editor.mCallback.onStart(params.getString(KEY_ACTION));
+                        if (editor.mEditListener != null) {
+                            editor.mEditListener.onStart(token);
+                        }
+                        break;
+                    case MSG_ON_STAGE_PROGRESS:
+                        if (editor.mEditStageListener != null) {
+                            editor.mEditStageListener.onProgress(params.getString(KEY_ACTION),
+                                    params.getFloat(KEY_STAGE_PROGRESS));
                         }
                         break;
                     case MSG_ON_PROGRESS:
-                        if (editor.mCallback != null) {
-                            editor.mCallback.onProgress(params.getString(KEY_ACTION),
-                                    params.getFloat(KEY_PROGRESS));
+                        if (editor.mEditListener != null) {
+                            editor.mEditListener.onProgress(token, params.getFloat(KEY_PROGRESS));
+                        }
+                        break;
+                    case MSG_ON_STAGE_SUCCEED:
+                        if (editor.mEditStageListener != null) {
+                            editor.mEditStageListener.onSucceeded(params.getString(KEY_ACTION));
                         }
                         break;
                     case MSG_ON_SUCCEED:
-                        if (editor.mCallback != null) {
-                            editor.mCallback.onSucceeded(params.getString(KEY_ACTION));
+                        if (editor.mEditListener != null) {
+                            editor.mEditListener.onSucceeded(token, editor.mOutputFile);
                         }
                         break;
-                    case MSG_ON_FAILED:
+                    case MSG_ON_STAGE_FAILED:
                         // clean all the tmp files.
                         for (AbstractAction act : editor.mActionList) {
                             act.release();
                         }
 
-                        if (editor.mCallback != null) {
-                            editor.mCallback.onFailed(params.getString(KEY_ACTION));
+                        if (editor.mEditStageListener != null) {
+                            editor.mEditStageListener.onFailed(params.getString(KEY_ACTION));
+                        }
+                        break;
+                    case MSG_ON_FAILED:
+                        if (editor.mEditListener != null) {
+                            editor.mEditListener.onFailed(token);
                         }
                         break;
                     default:
@@ -122,24 +148,50 @@ public class VideoEditorManager {
     }
 
     public void onStart(long token, AbstractAction action) {
-        Message message = Message.obtain();
-        Bundle params = new Bundle();
-        params.putLong(KEY_TOKEN, token);
-        params.putString(KEY_ACTION, action.mActionName);
-        message.what = MSG_ON_START;
-        message.setData(params);
-        mMainHandler.sendMessage(message);
+        // notify stage
+        Message stageMsg = Message.obtain();
+        Bundle stageParams = new Bundle();
+        stageParams.putLong(KEY_TOKEN, token);
+        stageParams.putString(KEY_ACTION, action.mActionName);
+        stageMsg.what = MSG_ON_STAGE_START;
+        stageMsg.setData(stageParams);
+        mMainHandler.sendMessage(stageMsg);
+        // notify overall
+        Editor editor = mCallMap.get(token);
+        // send overall start msg only when the first action started.
+        if (editor.mActionList.indexOf(action) == 0) {
+            Message overallMsg = Message.obtain();
+            Bundle overallParams = new Bundle();
+            overallParams.putLong(KEY_TOKEN, token);
+            overallMsg.what = MSG_ON_START;
+            overallMsg.setData(overallParams);
+            mMainHandler.sendMessage(overallMsg);
+        }
     }
 
     public void onProgress(long token, AbstractAction action, float progress) {
-        Message message = Message.obtain();
-        Bundle params = new Bundle();
-        params.putLong(KEY_TOKEN, token);
-        params.putString(KEY_ACTION, action.mActionName);
-        params.putFloat(KEY_PROGRESS, progress);
-        message.what = MSG_ON_PROGRESS;
-        message.setData(params);
-        mMainHandler.sendMessage(message);
+        Editor editor = mCallMap.get(token);
+        if (editor == null) {
+            return;
+        }
+        // notify stage
+        Message stageMsg = Message.obtain();
+        Bundle stageParams = new Bundle();
+        stageParams.putLong(KEY_TOKEN, token);
+        stageParams.putString(KEY_ACTION, action.mActionName);
+        stageParams.putFloat(KEY_STAGE_PROGRESS, progress);
+        stageMsg.what = MSG_ON_STAGE_PROGRESS;
+        stageMsg.setData(stageParams);
+        mMainHandler.sendMessage(stageMsg);
+        // notify overall
+        Message overallMsg = Message.obtain();
+        Bundle overallParams = new Bundle();
+        overallParams.putLong(KEY_TOKEN, token);
+        int lastPos = editor.mActionList.indexOf(action);
+        overallParams.putFloat(KEY_PROGRESS, (lastPos * 1.0f + progress) / editor.mActionList.size());
+        overallMsg.what = MSG_ON_PROGRESS;
+        overallMsg.setData(overallParams);
+        mMainHandler.sendMessage(overallMsg);
     }
 
     public void onSucceed(long token, AbstractAction action) {
@@ -149,28 +201,28 @@ public class VideoEditorManager {
             // this editor is canceled, so remove it's output and no callback.
             clear(token);
         } else {
+            // notify stage
+            Message stageMsg = Message.obtain();
+            Bundle stageParams = new Bundle();
+            stageParams.putLong(KEY_TOKEN, token);
+            stageParams.putString(KEY_ACTION, action.mActionName);
+            stageMsg.what = MSG_ON_STAGE_SUCCEED;
+            stageMsg.setData(stageParams);
+            mMainHandler.sendMessage(stageMsg);
+
             // try exec next action.
             if (editor.mActionIterator.hasNext()) {
-                // notify user on ui thread.
-                Message message = Message.obtain();
-                Bundle params = new Bundle();
-                params.putLong(KEY_TOKEN, token);
-                params.putString(KEY_ACTION, action.mActionName);
-                message.what = MSG_ON_SUCCEED;
-                message.setData(params);
-                mMainHandler.sendMessage(message);
                 // our output is the input of next action.
                 editor.mActionIterator.next().start(action.mOutputFile);
             } else {
                 action.mOutputFile.renameTo(editor.mOutputFile);
-                // notify user on ui thread.
-                Message message = Message.obtain();
-                Bundle params = new Bundle();
-                params.putLong(KEY_TOKEN, token);
-                params.putString(KEY_ACTION, action.mActionName);
-                message.what = MSG_ON_SUCCEED;
-                message.setData(params);
-                mMainHandler.sendMessage(message);
+                // notify overall
+                Message overallMsg = Message.obtain();
+                Bundle overallParams = new Bundle();
+                overallParams.putLong(KEY_TOKEN, token);
+                overallMsg.what = MSG_ON_SUCCEED;
+                overallMsg.setData(overallParams);
+                mMainHandler.sendMessage(overallMsg);
                 // clear all.
                 clear(token);
             }
@@ -191,16 +243,25 @@ public class VideoEditorManager {
     }
 
     public void onFailed(long token, AbstractAction action) {
-        Message message = Message.obtain();
-        Bundle params = new Bundle();
-        params.putLong(KEY_TOKEN, token);
-        params.putString(KEY_ACTION, action.mActionName);
-        message.what = MSG_ON_FAILED;
-        message.setData(params);
-        mMainHandler.sendMessage(message);
+        // notify stage
+        Message stageMsg = Message.obtain();
+        Bundle stageParams = new Bundle();
+        stageParams.putLong(KEY_TOKEN, token);
+        stageParams.putString(KEY_ACTION, action.mActionName);
+        stageMsg.what = MSG_ON_STAGE_FAILED;
+        stageMsg.setData(stageParams);
+        mMainHandler.sendMessage(stageMsg);
+        // notify overall
+        Message overallMsg = Message.obtain();
+        Bundle overallParams = new Bundle();
+        overallParams.putLong(KEY_TOKEN, token);
+        overallMsg.what = MSG_ON_FAILED;
+        overallMsg.setData(overallParams);
+        mMainHandler.sendMessage(overallMsg);
     }
 
     private long getToken() {
+        // just take current time as our token.
         return System.currentTimeMillis();
     }
 
@@ -212,7 +273,8 @@ public class VideoEditorManager {
         public long mToken;
         public boolean mIsCanceled;
 
-        VideoEditCallback mCallback;
+        EditListener mEditListener;
+        EditStageListener mEditStageListener;
 
         private Editor(File input) {
             this.mInputFile = input;
@@ -234,7 +296,7 @@ public class VideoEditorManager {
             return this;
         }
 
-        public long commit(VideoEditCallback callback) {
+        public long commit(EditListener listener, EditStageListener stageListener) {
             // check if input file is rational.
             if (mInputFile == null ||
                     !mInputFile.exists() ||
@@ -252,7 +314,8 @@ public class VideoEditorManager {
                 return Constants.INVALID_TOKEN;
             }
 
-            mCallback = callback;
+            mEditListener = listener;
+            mEditStageListener = stageListener;
             sManager.mCallMap.put(mToken, this);
 
             mActionIterator = mActionList.iterator();
