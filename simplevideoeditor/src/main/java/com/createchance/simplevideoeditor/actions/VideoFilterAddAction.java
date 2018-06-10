@@ -37,7 +37,7 @@ public class VideoFilterAddAction extends AbstractAction {
     private VideoFrameLookupFilter mVideoFrameLookupFilter;
 
     private VideoFilterAddAction() {
-        super(Constants.ACTION_ADD_WATER_MARK);
+        super(Constants.ACTION_ADD_FILTER);
     }
 
     public File getInputFile() {
@@ -115,6 +115,7 @@ public class VideoFilterAddAction extends AbstractAction {
         OutputSurface outputSurface;
         InputSurface inputSurface;
         int videoWidth, videoHeight;
+        boolean isFinished;
 
         @Override
         public void run() {
@@ -122,6 +123,7 @@ public class VideoFilterAddAction extends AbstractAction {
                 if (checkRational()) {
                     prepare();
                     addWatermark();
+                    isFinished = true;
                 } else {
                     Logger.e(TAG, "Action params error.");
                     onFailed();
@@ -133,6 +135,9 @@ public class VideoFilterAddAction extends AbstractAction {
             }
 
             Log.d(TAG, "Watermark add done.");
+            if (isFinished) {
+                onSucceeded();
+            }
         }
 
         private boolean checkRational() {
@@ -344,7 +349,6 @@ public class VideoFilterAddAction extends AbstractAction {
             }
 
             onProgress(1f);
-            onSucceeded();
         }
 
         private void release() {

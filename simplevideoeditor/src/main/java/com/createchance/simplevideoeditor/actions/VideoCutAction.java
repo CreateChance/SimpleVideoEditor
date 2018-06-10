@@ -70,6 +70,7 @@ public class VideoCutAction extends AbstractAction {
     }
 
     private class CutWorker implements Runnable {
+        boolean isFinished;
 
         @Override
         public void run() {
@@ -77,6 +78,7 @@ public class VideoCutAction extends AbstractAction {
                 if (checkRational()) {
                     prepare();
                     cut();
+                    isFinished = true;
                 } else {
                     Logger.e(TAG, "Action params error.");
                     onFailed();
@@ -87,6 +89,10 @@ public class VideoCutAction extends AbstractAction {
                 onFailed();
             } finally {
                 release();
+            }
+
+            if (isFinished) {
+                onSucceeded();
             }
         }
 
@@ -249,7 +255,6 @@ public class VideoCutAction extends AbstractAction {
             Log.d(TAG, "Cut file :" + mInputFile + " done!");
 
             onProgress(1f);
-            onSucceeded();
         }
 
         private void release() {

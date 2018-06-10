@@ -27,11 +27,13 @@ import java.util.List;
 public class VideoMergeAction extends AbstractAction {
     private static final String TAG = "VideoMergeAction";
 
-    private List<File> mMergeFiles = new ArrayList<>();
+    private List<File> mMergeFiles;
+    private int mInputPos;
     private MergeWorker mMergeWorker;
 
     private VideoMergeAction() {
         super(Constants.ACTION_MERGE_VIDEOS);
+        mMergeFiles = new ArrayList<>();
     }
 
     public List<File> getInputFiles() {
@@ -56,6 +58,12 @@ public class VideoMergeAction extends AbstractAction {
             return this;
         }
 
+        public Builder inputHere() {
+            mergeAction.mInputPos = mergeAction.mMergeFiles.size();
+
+            return this;
+        }
+
         public VideoMergeAction build() {
             return mergeAction;
         }
@@ -69,6 +77,7 @@ public class VideoMergeAction extends AbstractAction {
         int outVideoTrackId, outAudioTrackId;
         ByteBuffer byteBuffer = ByteBuffer.allocate(512 * 1024);
         long ptsOffset;
+        boolean isFinished;
 
         @Override
         public void run() {
@@ -76,8 +85,9 @@ public class VideoMergeAction extends AbstractAction {
                 if (checkRational()) {
                     prepare();
                     // add input video file to merge list.
-                    mMergeFiles.add(0, mInputFile);
+                    mMergeFiles.add(mInputPos, mInputFile);
                     merge();
+                    isFinished = true;
                 } else {
                     Logger.e(TAG, "Action params error.");
                     onFailed();
@@ -87,6 +97,10 @@ public class VideoMergeAction extends AbstractAction {
                 onFailed();
             } finally {
                 release();
+            }
+
+            if (isFinished) {
+                onSucceeded();
             }
         }
 
@@ -228,7 +242,6 @@ public class VideoMergeAction extends AbstractAction {
             Log.d(TAG, "###############################################merge done!");
 
             onProgress(1f);
-            onSucceeded();
         }
 
         private void release() {

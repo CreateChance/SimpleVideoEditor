@@ -35,6 +35,8 @@ public class VideoBgmAddAction extends AbstractAction {
     private long mBgmDurationMs;
     private boolean mOverride = true;
 
+    private boolean mIsAACBgm;
+
     private VideoBgmAddAction() {
         super(Constants.ACTION_ADD_BGM);
     }
@@ -72,6 +74,7 @@ public class VideoBgmAddAction extends AbstractAction {
             Logger.d(TAG, "bgm mime type: " + bgmMime);
             switch (bgmMime) {
                 case MediaFormat.MIMETYPE_AUDIO_AAC:
+                    mIsAACBgm = true;
                     addAacBgm(mBgmFile, false);
                     break;
                 case MediaFormat.MIMETYPE_AUDIO_MPEG:
@@ -113,7 +116,7 @@ public class VideoBgmAddAction extends AbstractAction {
                     @Override
                     public void onFailed() {
                         Logger.e(TAG, "Audio trans code failed.");
-                        onFailed();
+                        VideoBgmAddAction.this.onFailed();
                     }
                 });
     }
@@ -197,6 +200,7 @@ public class VideoBgmAddAction extends AbstractAction {
         boolean reachBgmEnd = false;
         File bgmFile;
         boolean deleteAfterUse;
+        boolean isFinished;
 
         AacBgmAddWorker(File bgmFile, boolean deleteAfterUse) {
             this.bgmFile = bgmFile;
@@ -209,22 +213,25 @@ public class VideoBgmAddAction extends AbstractAction {
                 if (checkRational()) {
                     prepare();
                     addBgm();
+                    isFinished = true;
                 } else {
                     Logger.e(TAG, "Action params error.");
                     onFailed();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                release();
                 onFailed();
-                return;
+            } finally {
+                release();
             }
 
-            release();
             if (deleteAfterUse) {
                 bgmFile.delete();
             }
-            onSucceeded();
+
+            if (isFinished) {
+                onSucceeded();
+            }
         }
 
         private boolean checkRational() {
@@ -361,7 +368,11 @@ public class VideoBgmAddAction extends AbstractAction {
                 Logger.d(TAG, "Write source video track first.");
                 sourceExtractor.selectTrack(inVideoTrackId);
                 while (true) {
-                    onProgress((bufferInfo.presentationTimeUs * 0.25f / (videoDuration * 1000)) + 0.5f);
+                    if (mIsAACBgm) {
+                        onProgress(bufferInfo.presentationTimeUs * 0.5f / (videoDuration * 1000));
+                    } else {
+                        onProgress((bufferInfo.presentationTimeUs * 0.25f / (videoDuration * 1000)) + 0.5f);
+                    }
                     int videoSampleSize = sourceExtractor.readSampleData(sourceBuffer, 0);
                     if (videoSampleSize < 0) {
                         Logger.d(TAG, "Reach source video eos.");
@@ -404,7 +415,11 @@ public class VideoBgmAddAction extends AbstractAction {
                     // next frame
                     sourceExtractor.advance();
 
-                    onProgress((bufferInfo.presentationTimeUs * 0.25f / (videoDuration * 1000)) + 0.75f);
+                    if (mIsAACBgm) {
+                        onProgress(bufferInfo.presentationTimeUs * 0.5f / (videoDuration * 1000) + 0.5f);
+                    } else {
+                        onProgress((bufferInfo.presentationTimeUs * 0.25f / (videoDuration * 1000)) + 0.75f);
+                    }
 
                     if (!reachBgmEnd &&
                             bufferInfo.presentationTimeUs >= mVideoStartPosMs * 1000 &&

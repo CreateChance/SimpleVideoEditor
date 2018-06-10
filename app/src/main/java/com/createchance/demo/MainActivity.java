@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.createchance.simplevideoeditor.Constants;
 import com.createchance.simplevideoeditor.VideoEditCallback;
 import com.createchance.simplevideoeditor.VideoEditorManager;
 import com.createchance.simplevideoeditor.actions.VideoBgmAddAction;
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mActionView;
     private TextView mProgressView;
+    private long mToken = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +37,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void start(View view) {
-        Log.d(TAG, "start click!!!!!!!!!!!!");
+        if (mToken != -1) {
+            Log.e(TAG, "We are on going!!!!!!");
+            return;
+        }
 //        Test.addBackgroundMusic(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.aac"),
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"),
 //                new File(Environment.getExternalStorageDirectory(), "videoeditor/output.mp4"));
@@ -58,13 +63,13 @@ public class MainActivity extends AppCompatActivity {
 
         VideoFilterAddAction filterAddAction = new VideoFilterAddAction.Builder()
                 .watermarkFilter(new WaterMarkFilter(BitmapFactory.decodeResource(getResources(), R.drawable.watermark), 100, 200, 1))
-                .frameFilter(new VideoFrameLookupFilter(BitmapFactory.decodeResource(getResources(), R.drawable.filter7), 0.5f))
+                .frameFilter(new VideoFrameLookupFilter(BitmapFactory.decodeResource(getResources(), R.drawable.filter9), 1))
                 .build();
         VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
-                .bgmFile(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.mp3"))
-                .videoFrom(5 * 1000)
+                .bgmFile(new File(Environment.getExternalStorageDirectory(), "videoeditor/music.aac"))
+//                .videoFrom(5 * 1000)
                 .videoDuration(7 * 1000)
-//                .bgmFrom(5 * 1000)
+                .bgmFrom(5 * 1000)
                 .build();
         VideoBgmRemoveAction bgmRemoveAction = new VideoBgmRemoveAction.Builder()
                 .from(3 * 1000)
@@ -72,20 +77,21 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         VideoCutAction cutAction = new VideoCutAction.Builder()
                 .from(5 * 1000)
-//                .duration(10 * 1000)
+                .duration(10 * 1000)
                 .build();
         VideoMergeAction mergeAction = new VideoMergeAction.Builder()
+                .inputHere()
                 .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180313_152651.mp4"))
 //                .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180330_181524.mp4"))
 //                .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180401_103412.mp4"))
 //                .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180404_104840.mp4"))
                 .build();
-        VideoEditorManager.getManager()
+        mToken = VideoEditorManager.getManager()
                 .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
-//                .withAction(bgmAddAction)
-//                .withAction(filterAddAction)
-//                .withAction(bgmRemoveAction)
-//                .withAction(cutAction)
+                .withAction(cutAction)
+                .withAction(bgmAddAction)
+                .withAction(filterAddAction)
+                .withAction(bgmRemoveAction)
                 .withAction(mergeAction)
                 .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/output.mp4"))
                 .commit(new VideoEditCallback() {
@@ -109,6 +115,9 @@ public class MainActivity extends AppCompatActivity {
                         super.onSucceeded(action);
                         Log.d(TAG, "onSucceeded: " + action);
                         mActionView.setText(action + ": succeed");
+                        if (Constants.ACTION_MERGE_VIDEOS.equals(action)) {
+                            mToken = -1;
+                        }
                     }
 
                     @Override
@@ -118,5 +127,12 @@ public class MainActivity extends AppCompatActivity {
                         mActionView.setText(action + ": failed");
                     }
                 });
+    }
+
+    public void cancel(View view) {
+        // cancel edit.
+        if (mToken != -1) {
+            VideoEditorManager.getManager().cancel(mToken);
+        }
     }
 }

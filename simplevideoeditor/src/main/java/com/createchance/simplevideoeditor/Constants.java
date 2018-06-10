@@ -20,6 +20,8 @@ public class Constants {
     public static final String ACTION_ADD_BGM = "ActionAddVideoBgm";
     public static final String ACTION_CUT_VIDEO = "ActionCutVideo";
     public static final String ACTION_MERGE_VIDEOS = "ActionMergeVideos";
-    public static final String ACTION_ADD_WATER_MARK = "ActionAddVideoWatermark";
+    public static final String ACTION_ADD_FILTER = "ActionAddVideoFilter";
     public static final String ACTION_AUDIO_TRANS_CODE = "ActionAudioTransCode";
+
+    public static final int INVALID_TOKEN = -1;
 }

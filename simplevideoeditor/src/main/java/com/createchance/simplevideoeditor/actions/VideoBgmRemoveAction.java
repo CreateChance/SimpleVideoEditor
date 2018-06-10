@@ -3,7 +3,6 @@ package com.createchance.simplevideoeditor.actions;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaMuxer;
 import android.util.Log;
 
@@ -71,6 +70,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
         ByteBuffer byteBuffer = ByteBuffer.allocate(512 * 1024);
         ByteBuffer emptyBuffer = ByteBuffer.allocate(512 * 1024);
         boolean isMuxerStarted;
+        boolean isFinished;
 
         @Override
         public void run() {
@@ -78,6 +78,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
                 if (checkRational()) {
                     prepare();
                     removeBgm();
+                    isFinished = true;
                 } else {
                     Logger.e(TAG, "Action params error.");
                     onFailed();
@@ -88,6 +89,10 @@ public class VideoBgmRemoveAction extends AbstractAction {
             } finally {
                 release();
             }
+
+            if (isFinished) {
+                onSucceeded();
+            }
         }
 
         private boolean checkRational() {
@@ -97,14 +102,11 @@ public class VideoBgmRemoveAction extends AbstractAction {
                     mOutputFile != null &&
                     mRemoveStartPosMs >= 0 &&
                     mRemoveDurationMs >= 0) {
-                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-                mediaMetadataRetriever.setDataSource(mInputFile.getAbsolutePath());
-                long duration = Long.valueOf(mediaMetadataRetriever.
-                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-                mediaMetadataRetriever.release();
+                long duration = VideoUtil.getVideoDuration(mInputFile);
                 if (mRemoveStartPosMs + mRemoveDurationMs > duration) {
-                    Logger.e(TAG, "Video selected section of out of duration!");
-                    return false;
+                    mRemoveDurationMs = duration - mRemoveStartPosMs;
+                    Logger.w(TAG, "Video selected section of out of duration!, adjust to: " +
+                            mRemoveDurationMs);
                 }
 
                 if (mOutputFile.exists()) {
@@ -139,14 +141,6 @@ public class VideoBgmRemoveAction extends AbstractAction {
                     Log.d(TAG, "removeBgm, found video track.");
                     inVideoTrackId = i;
                     outVideoTrackId = mMediaMuxer.addTrack(mediaFormat);
-                    long videoDurationUs = mediaFormat.getLong(MediaFormat.KEY_DURATION);
-                    // check start pos and duration setting, only check for video.
-                    if ((mRemoveStartPosMs + mRemoveDurationMs) * 1000 > videoDurationUs) {
-                        Log.e(TAG, "removeBgm error. Video duration is " + videoDurationUs +
-                                ", but start pos: " + mRemoveStartPosMs * 1000 +
-                                " and duration is: " + mRemoveDurationMs * 1000);
-                        return;
-                    }
                 } else if (mime.startsWith("audio")) {
                     Log.d(TAG, "removeBgm, found audio track");
                     inAudioTrackId = i;
@@ -216,7 +210,6 @@ public class VideoBgmRemoveAction extends AbstractAction {
 
             Log.d(TAG, "removeBgm done!!");
             onProgress(1f);
-            onSucceeded();
         }
 
         private void release() {

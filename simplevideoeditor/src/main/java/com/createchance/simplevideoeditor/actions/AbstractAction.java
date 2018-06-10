@@ -12,13 +12,12 @@ import java.io.File;
  */
 
 public abstract class AbstractAction {
+    public final String mActionName;
 
-    private AbstractAction mSuccessNext;
+    public File mInputFile;
+    public File mOutputFile;
 
-    private final String mActionName;
-
-    protected File mInputFile;
-    protected File mOutputFile;
+    public long mToken;
 
     AbstractAction(String actionName) {
         this.mActionName = actionName;
@@ -38,41 +37,27 @@ public abstract class AbstractAction {
         }
     }
 
-    public final void successNext(AbstractAction action) {
-        mSuccessNext = action;
-    }
-
     protected final void onStarted() {
-        VideoEditorManager.getManager().onStart(mActionName);
+        VideoEditorManager.getManager().onStart(mToken, this);
     }
 
     protected final void onProgress(float progress) {
-        VideoEditorManager.getManager().onProgress(mActionName, progress);
+        VideoEditorManager.getManager().onProgress(mToken, this, progress);
     }
 
     protected final void onSucceeded() {
-        // Our output file is the input of next action.
-        if (mSuccessNext != null) {
-            VideoEditorManager.getManager().onSucceed(mActionName);
-            mSuccessNext.start(mOutputFile);
-        } else {
-            // We are the next action, rename our output to dest file.
-            // TODO: What if renameTo return false??
-            mOutputFile.renameTo(VideoEditorManager.getManager().getOutputFile());
-            VideoEditorManager.getManager().onSucceed(mActionName);
-            VideoEditorManager.getManager().onAllSucceed();
-        }
+        VideoEditorManager.getManager().onSucceed(mToken, this);
     }
 
     protected final void onFailed() {
-        VideoEditorManager.getManager().onFailed(mActionName);
+        VideoEditorManager.getManager().onFailed(mToken, this);
     }
 
     protected final File getBaseWorkFolder() {
-        return VideoEditorManager.getManager().getBaseWorkFolder();
+        return VideoEditorManager.getManager().getBaseWorkFolder(mToken);
     }
 
     private File genOutputFile() {
-        return new File(VideoEditorManager.getManager().getBaseWorkFolder(), mActionName + ".tmp");
+        return new File(VideoEditorManager.getManager().getBaseWorkFolder(mToken), mActionName + ".tmp");
     }
 }
