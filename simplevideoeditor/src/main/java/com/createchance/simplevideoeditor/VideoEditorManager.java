@@ -90,6 +90,8 @@ public class VideoEditorManager {
                         if (editor.mEditListener != null) {
                             editor.mEditListener.onSucceeded(token, editor.mOutputFile);
                         }
+                        // clear all.
+                        clear(token);
                         break;
                     case MSG_ON_STAGE_FAILED:
                         // clean all the tmp files.
@@ -223,8 +225,6 @@ public class VideoEditorManager {
                 overallMsg.what = MSG_ON_SUCCEED;
                 overallMsg.setData(overallParams);
                 mMainHandler.sendMessage(overallMsg);
-                // clear all.
-                clear(token);
             }
         }
     }
