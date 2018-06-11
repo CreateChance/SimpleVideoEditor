@@ -130,7 +130,7 @@ public class VideoFrameDrawer {
     }
 
     public void release() {
-//        deleteFrameBuffer();
+        deleteFrameBuffer();
     }
 
     public void setWaterMarkFilter(WaterMarkFilter filter) {
