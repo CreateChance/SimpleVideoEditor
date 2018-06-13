@@ -3,11 +3,12 @@ package com.createchance.simplevideoeditor.gles;
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 
+import com.createchance.simplevideoeditor.Logger;
+
 import java.nio.FloatBuffer;
 
 import static android.opengl.GLES20.GL_TEXTURE0;
 import static android.opengl.GLES20.GL_TEXTURE1;
-import static android.opengl.GLES20.GL_TEXTURE3;
 import static android.opengl.GLES20.GL_TEXTURE_2D;
 import static android.opengl.GLES20.glActiveTexture;
 import static android.opengl.GLES20.glBindTexture;
@@ -28,6 +29,9 @@ import static com.createchance.simplevideoeditor.gles.OpenGlUtil.ShaderParam.TYP
  * @date 2018/6/3
  */
 public class VideoFrameLookupFilter extends AbstractFilter {
+
+    private static final String TAG = "VideoFrameLookupFilter";
+
     // Attribute
     private final String A_POSITION = "a_Position";
     private final String A_TEXTURE_COORDINATES = "a_InputTextureCoordinate";
@@ -38,19 +42,19 @@ public class VideoFrameLookupFilter extends AbstractFilter {
     private final String U_CURVE = "u_Curve";
     private final String U_STRENGTH = "u_Strength";
 
-    private FloatBuffer vertexPositionBuffer;
-    private FloatBuffer textureCoordinateBuffer;
+    private FloatBuffer mVertexPositionBuffer;
+    private FloatBuffer mTextureCoordinateBuffer;
 
-    private Bitmap curve;
-    private float strength;
+    private Bitmap mCurve;
+    private float mStrength = 1.0f;
 
-    private int curveTextureId;
+    private int mCurveTextureId;
 
-    public VideoFrameLookupFilter(Bitmap curve, float strength) {
+    private long mStartPosMs, mDurationMs;
+
+    private VideoFrameLookupFilter() {
         super(Shaders.BASE_VIDEO_FRAME_LOOKUP_VERTEX_SHADER,
                 Shaders.BASE_VIDEO_FRAME_LOOKUP_FRAGMENT_SHADER);
-        this.curve = curve;
-        this.strength = strength;
     }
 
     @Override
@@ -85,7 +89,7 @@ public class VideoFrameLookupFilter extends AbstractFilter {
     protected void onInitDone() {
         super.onInitDone();
 
-        vertexPositionBuffer = OpenGlUtil.getFloatBuffer(
+        mVertexPositionBuffer = OpenGlUtil.getFloatBuffer(
                 new float[]{
                         -1.0f, 1.0f,
                         -1.0f, -1.0f,
@@ -95,7 +99,7 @@ public class VideoFrameLookupFilter extends AbstractFilter {
                 BYTES_PER_FLOAT
         );
         // default rotation is 0 degree
-        textureCoordinateBuffer = OpenGlUtil.getFloatBuffer(
+        mTextureCoordinateBuffer = OpenGlUtil.getFloatBuffer(
                 new float[]{
                         0.0f, 0.0f,
                         0.0f, 1.0f,
@@ -112,10 +116,10 @@ public class VideoFrameLookupFilter extends AbstractFilter {
                 false,
                 OpenGlUtil.flip(OpenGlUtil.getIdentityMatrix(), false, true),
                 0);
-        glUniform1f(shaderParamMap.get(U_STRENGTH).location, strength);
+        glUniform1f(shaderParamMap.get(U_STRENGTH).location, mStrength);
         glActiveTexture(GL_TEXTURE1);
-        curveTextureId = OpenGlUtil.loadTexture(curve);
-        glBindTexture(GL_TEXTURE_2D, curveTextureId);
+        mCurveTextureId = OpenGlUtil.loadTexture(mCurve);
+        glBindTexture(GL_TEXTURE_2D, mCurveTextureId);
         glUniform1i(shaderParamMap.get(U_CURVE).location, 1);
     }
 
@@ -123,23 +127,23 @@ public class VideoFrameLookupFilter extends AbstractFilter {
     protected void onDraw() {
         glViewport(0, 0, surfaceWidth, surfaceHeight);
         glEnableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
-        vertexPositionBuffer.position(0);
+        mVertexPositionBuffer.position(0);
         glVertexAttribPointer(
                 shaderParamMap.get(A_POSITION).location,
                 2,
                 GLES20.GL_FLOAT,
                 false,
                 2 * BYTES_PER_FLOAT,
-                vertexPositionBuffer);
+                mVertexPositionBuffer);
         glEnableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
-        textureCoordinateBuffer.position(0);
+        mTextureCoordinateBuffer.position(0);
         glVertexAttribPointer(
                 shaderParamMap.get(A_TEXTURE_COORDINATES).location,
                 2,
                 GLES20.GL_FLOAT,
                 false,
                 2 * BYTES_PER_FLOAT,
-                textureCoordinateBuffer);
+                mTextureCoordinateBuffer);
 
         // bind textures
         glActiveTexture(GL_TEXTURE0);
@@ -147,7 +151,7 @@ public class VideoFrameLookupFilter extends AbstractFilter {
         glUniform1i(shaderParamMap.get(U_INPUT_IMAGE_TEXTURE).location, 0);
 
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, curveTextureId);
+        glBindTexture(GL_TEXTURE_2D, mCurveTextureId);
         glUniform1i(shaderParamMap.get(U_CURVE).location, 1);
 
         glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
@@ -156,10 +160,98 @@ public class VideoFrameLookupFilter extends AbstractFilter {
     }
 
     @Override
+    public boolean shouldDraw(long presentationTimeUs) {
+        if (mStartPosMs == 0 && mDurationMs == 0) {
+            return true;
+        }
+
+        return presentationTimeUs >= mStartPosMs * 1000 &&
+                presentationTimeUs <= (mStartPosMs + mDurationMs) * 1000;
+    }
+
+    @Override
     protected void onSetInputTextureId() {
         super.onSetInputTextureId();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, inputTextureId);
         glUniform1i(shaderParamMap.get(U_INPUT_IMAGE_TEXTURE).location, 0);
+    }
+
+    public boolean checkRational(long videoDuration) {
+        if (mCurve == null || mCurve.isRecycled()) {
+            Logger.e(TAG, "Curve is null or recycled! Curve: " + mCurve);
+            return false;
+        }
+
+        if (mStrength < 0 || mStrength > 1) {
+            Logger.e(TAG, "Strength must be  0f <= strength <= 1f, your strength: " + mStrength);
+            return false;
+        }
+
+        if (mStartPosMs < 0 || mDurationMs < 0) {
+            Logger.e(TAG, "Start pos and duration must >= 0! Your start pos: " +
+                    mStartPosMs +
+                    ", duration: " +
+                    mDurationMs);
+            return false;
+        }
+
+        if (mStartPosMs == 0 && mDurationMs > 0) {
+            if (mDurationMs > videoDuration) {
+                Logger.e(TAG, "Start pos is 0, but duration is out of video duration: " +
+                        videoDuration +
+                        ", your duration: " +
+                        mDurationMs);
+                return false;
+            }
+        }
+
+        if (mStartPosMs > 0 && mDurationMs == 0) {
+            if (mStartPosMs >= videoDuration) {
+                Logger.e(TAG, "Duration is 0, but start is out of video duration: " +
+                        videoDuration +
+                        ", your start pos: " +
+                        mStartPosMs);
+                return false;
+            }
+
+            // adjust mDuration to rest section.
+            mDurationMs = videoDuration - mStartPosMs;
+            Logger.w(TAG, "Your start pos is > 0, but duration is 0, so we adjust duration to : " + mDurationMs);
+        }
+
+        return true;
+    }
+
+    public static class Builder {
+        private VideoFrameLookupFilter lookupFilter = new VideoFrameLookupFilter();
+
+        public Builder curve(Bitmap curve) {
+            lookupFilter.mCurve = curve;
+
+            return this;
+        }
+
+        public Builder strength(float strength) {
+            lookupFilter.mStrength = strength;
+
+            return this;
+        }
+
+        public Builder startFrom(long startPosMs) {
+            lookupFilter.mStartPosMs = startPosMs;
+
+            return this;
+        }
+
+        public Builder duration(long durationMs) {
+            lookupFilter.mDurationMs = durationMs;
+
+            return this;
+        }
+
+        public VideoFrameLookupFilter build() {
+            return lookupFilter;
+        }
     }
 }

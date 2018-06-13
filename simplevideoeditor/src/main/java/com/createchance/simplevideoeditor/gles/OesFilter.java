@@ -121,6 +121,11 @@ public class OesFilter extends AbstractFilter {
         glDisableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
     }
 
+    @Override
+    public boolean shouldDraw(long presentationTime) {
+        return true;
+    }
+
 
     public void setUMatrix(float[] matrix) {
         glUniformMatrix4fv(shaderParamMap.get(U_MATRIX).location, 1, false, matrix, 0);

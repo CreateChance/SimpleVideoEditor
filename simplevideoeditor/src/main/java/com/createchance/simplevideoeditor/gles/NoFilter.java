@@ -1,7 +1,6 @@
 package com.createchance.simplevideoeditor.gles;
 
 import android.opengl.GLES20;
-import android.util.Log;
 
 import java.nio.FloatBuffer;
 
@@ -125,6 +124,12 @@ public class NoFilter extends AbstractFilter {
         glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         glDisableVertexAttribArray(shaderParamMap.get(A_POSITION).location);
         glDisableVertexAttribArray(shaderParamMap.get(A_TEXTURE_COORDINATES).location);
+    }
+
+    @Override
+    public boolean shouldDraw(long presentationTimeUs) {
+        // we should draw all the time for no filter.
+        return true;
     }
 
     public void setUMatrix(float[] matrix) {

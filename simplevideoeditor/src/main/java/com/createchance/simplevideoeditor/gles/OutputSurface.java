@@ -250,9 +250,9 @@ public class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
     /**
      * Draws the data from SurfaceTexture onto the current EGL surface.
      */
-    public void drawImage() {
+    public void drawImage(long presentationTime) {
 //        mTextureRender.drawFrame(mSurfaceTexture);
-        mDrawer.draw();
+        mDrawer.draw(presentationTime);
     }
 
     @Override

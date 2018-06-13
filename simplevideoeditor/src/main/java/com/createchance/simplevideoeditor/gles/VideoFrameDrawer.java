@@ -86,36 +86,35 @@ public class VideoFrameDrawer {
         mShow.setInputTextureId(fboTexture[1]);
     }
 
-    public void draw() {
+    public void draw(long presentationTimeUs) {
         surfaceTexture.updateTexImage();
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         bindFrameBuffer(0);
-
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
         mOesFilter.draw();
-
         unbindFrameBuffer();
 
-        bindFrameBuffer(1);
-
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
-        if (videoFrameLookupFilter != null) {
+        if (videoFrameLookupFilter != null && videoFrameLookupFilter.shouldDraw(presentationTimeUs)) {
+            bindFrameBuffer(1);
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
             videoFrameLookupFilter.draw();
+            unbindFrameBuffer();
+            mShow.setInputTextureId(fboTexture[1]);
+        } else {
+            mShow.setInputTextureId(fboTexture[0]);
         }
 
-        if (waterMarkFilter != null) {
+        mShow.draw();
+
+        // draw watermark last.
+        if (waterMarkFilter != null && waterMarkFilter.shouldDraw(presentationTimeUs)) {
             waterMarkFilter.draw();
         }
-
-        unbindFrameBuffer();
-        mShow.draw();
     }
 
     public SurfaceTexture getSurfaceTexture() {

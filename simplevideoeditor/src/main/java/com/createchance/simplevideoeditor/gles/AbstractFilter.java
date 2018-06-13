@@ -39,6 +39,8 @@ public abstract class AbstractFilter {
 
     protected abstract void onDraw();
 
+    public abstract boolean shouldDraw(long presentationTime);
+
     protected void onInitDone() {
 
     }

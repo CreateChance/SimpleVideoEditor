@@ -316,7 +316,7 @@ public class VideoFilterAddAction extends AbstractAction {
                                 } else {
                                     // This waits for the image and renders it after it arrives.
                                     outputSurface.awaitNewImage();
-                                    outputSurface.drawImage();
+                                    outputSurface.drawImage(decodeInfo.presentationTimeUs);
                                     // Send it to the encoder.
                                     inputSurface.setPresentationTime(decodeInfo.presentationTimeUs * 1000);
                                     inputSurface.swapBuffers();
