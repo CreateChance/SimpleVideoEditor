@@ -1,3 +1,5 @@
+<p align="center"><img src="logo/1.png" alt="SimpleVideoEditor" height="210px"></p>
+
 # SimpleVideoEditor
 Video editor library for android, implemented with android media framework and opengl es 2.0.
 
