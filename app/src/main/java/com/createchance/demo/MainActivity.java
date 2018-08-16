@@ -127,10 +127,10 @@ public class MainActivity extends AppCompatActivity {
         // bgm add
         VideoBgmAddAction bgmAddAction = new VideoBgmAddAction.Builder()
                 .bgmFile(new File(Environment.getExternalStorageDirectory(), "videoeditor/music_48k.mp3"))
-//                .videoFrom(5 * 1000)
+                .videoFrom(5 * 1000)
                 .videoDuration(7 * 1000)
                 .override(true)
-//                .bgmFrom(5 * 1000)
+                .bgmFrom(5 * 1000)
                 .build();
 
         // bgm remove
@@ -149,19 +149,19 @@ public class MainActivity extends AppCompatActivity {
         VideoMergeAction mergeAction = new VideoMergeAction.Builder()
                 .merge(new File(Environment.getExternalStorageDirectory(), "videoeditor/input.mp4"))
                 .inputHere()
-//                .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180330_181524.mp4"))
-//                .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180401_103412.mp4"))
-//                .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180404_104840.mp4"))
+                .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180330_181524.mp4"))
+                .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180401_103412.mp4"))
+                .merge(new File(Environment.getExternalStorageDirectory(), "/DCIM/Camera/VID_20180404_104840.mp4"))
                 .build();
 
         // start it!
         mToken = VideoEditorManager.getManager()
                 .edit(new File(Environment.getExternalStorageDirectory(), "videoeditor/input2.mp4"))
-//                .withAction(cutAction)
-//                .withAction(bgmAddAction)
+                .withAction(cutAction)
+                .withAction(bgmAddAction)
                 .withAction(filterAddAction)
-//                .withAction(bgmRemoveAction)
-//                .withAction(mergeAction)
+                .withAction(bgmRemoveAction)
+                .withAction(mergeAction)
                 .saveAs(new File(Environment.getExternalStorageDirectory(), "videoeditor/output.mp4"))
                 .commit(mEditListener, mStageListener);
     }

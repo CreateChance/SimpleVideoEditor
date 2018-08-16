@@ -7,7 +7,7 @@ import com.createchance.simplevideoeditor.VideoEditorManager;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 03/05/2018
  */
 public class DemoApplication extends Application {

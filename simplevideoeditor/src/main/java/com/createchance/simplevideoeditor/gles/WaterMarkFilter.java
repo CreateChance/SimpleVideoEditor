@@ -8,7 +8,7 @@ import com.createchance.simplevideoeditor.Logger;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 2018/5/19
  */
 public class WaterMarkFilter extends NoFilter {

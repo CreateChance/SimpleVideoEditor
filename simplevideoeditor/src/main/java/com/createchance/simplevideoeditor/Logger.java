@@ -11,7 +11,7 @@ import static com.createchance.simplevideoeditor.Constants.Log.WARN;
 /**
  * Util to print logs.
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 17/04/2018
  */
 

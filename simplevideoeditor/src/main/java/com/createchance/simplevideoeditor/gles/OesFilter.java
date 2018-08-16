@@ -18,7 +18,7 @@ import static com.createchance.simplevideoeditor.gles.OpenGlUtil.ShaderParam.TYP
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 2018/5/19
  */
 public class OesFilter extends AbstractFilter {

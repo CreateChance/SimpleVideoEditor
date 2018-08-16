@@ -1,6 +1,5 @@
 package com.createchance.simplevideoeditor;
 
-import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,7 +17,7 @@ import java.util.List;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 02/05/2018
  */
 public class VideoEditorManager {
@@ -123,8 +122,8 @@ public class VideoEditorManager {
         return sManager;
     }
 
-    public synchronized void init(Application application) {
-        this.mContext = application;
+    public synchronized void init(Context context) {
+        this.mContext = context.getApplicationContext();
     }
 
     public Context getContext() {

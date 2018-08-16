@@ -3,7 +3,7 @@ package com.createchance.simplevideoeditor;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 24/04/2018
  */
 public class Constants {
@@ -21,7 +21,7 @@ public class Constants {
     public static final String ACTION_CUT_VIDEO = "ActionCutVideo";
     public static final String ACTION_MERGE_VIDEOS = "ActionMergeVideos";
     public static final String ACTION_ADD_FILTER = "ActionAddVideoFilter";
-    public static final String ACTION_AUDIO_TRANS_CODE = "ActionAudioTransCode";
+    public static final String ACTION_VIDEO_TO_GIF = "ActionVideoToGif";
 
     public static final int INVALID_TOKEN = -1;
 }

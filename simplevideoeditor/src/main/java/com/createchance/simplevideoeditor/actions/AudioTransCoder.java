@@ -27,7 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 25/03/2018
  */
 

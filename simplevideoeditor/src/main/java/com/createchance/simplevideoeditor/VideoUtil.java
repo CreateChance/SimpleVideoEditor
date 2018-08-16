@@ -4,6 +4,12 @@ import android.media.MediaMetadataRetriever;
 
 import java.io.File;
 
+/**
+ * Video util
+ *
+ * @author createchance
+ * @date 2018-04-15
+ */
 public class VideoUtil {
     public static int getVideoRotation(File video) {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();

@@ -15,7 +15,7 @@ import java.util.Iterator;
 /**
  * from https://github.com/xf420811/VideoComposerDemo/blob/master/app/src/main/java/com/chenxf/videocomposer/VideoComposer.java
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 29/03/2018
  */
 

@@ -9,7 +9,7 @@ import static android.opengl.GLES20.glClearColor;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 30/04/2018
  */
 public class VideoFrameDrawer {

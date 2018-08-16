@@ -7,7 +7,7 @@ import java.io.File;
 /**
  * 音视频编辑抽象类，所有的编辑操作都是这个类的子类
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 25/03/2018
  */
 

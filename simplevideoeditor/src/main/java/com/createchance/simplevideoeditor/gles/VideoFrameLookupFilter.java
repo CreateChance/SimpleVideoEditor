@@ -25,7 +25,7 @@ import static com.createchance.simplevideoeditor.gles.OpenGlUtil.ShaderParam.TYP
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 2018/6/3
  */
 public class VideoFrameLookupFilter extends AbstractFilter {

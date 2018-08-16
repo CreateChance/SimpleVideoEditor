@@ -12,7 +12,7 @@ import static android.opengl.GLES20.glUseProgram;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 2018/5/19
  */
 public abstract class AbstractFilter {

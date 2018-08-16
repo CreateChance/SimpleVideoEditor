@@ -63,7 +63,7 @@ import static android.opengl.GLES20.glValidateProgram;
 /**
  * ${DESC}
  *
- * @author gaochao1-iri
+ * @author createchance
  * @date 23/04/2018
  */
 class OpenGlUtil {
