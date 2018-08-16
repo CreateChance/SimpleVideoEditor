@@ -12,6 +12,11 @@ This library is still under development, apis will be changed.
 
 Any suggestion is welcome, you can raise issues or pull requests, thx.
 # How to use
+## Init
+```java
+// init with context, you can do this in application or activity.
+VideoEditorManager.getManager().init(context);
+```
 ## Define progress listeners:
 ```java
 // EditStageListener use to listener every stage progresss.
