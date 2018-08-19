@@ -5,11 +5,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.LongSparseArray;
 
 import com.createchance.simplevideoeditor.actions.AbstractAction;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -60,8 +60,8 @@ public class VideoEditorManager {
                 }
                 switch (msg.what) {
                     case MSG_ON_STAGE_START:
-                        if (editor.mEditStageListener != null) {
-                            editor.mEditStageListener.onStart(params.getString(KEY_ACTION));
+                        if (editor.mEditListener != null) {
+                            editor.mEditListener.onStageStart(token, params.getString(KEY_ACTION));
                         }
                         break;
                     case MSG_ON_START:
@@ -70,8 +70,10 @@ public class VideoEditorManager {
                         }
                         break;
                     case MSG_ON_STAGE_PROGRESS:
-                        if (editor.mEditStageListener != null) {
-                            editor.mEditStageListener.onProgress(params.getString(KEY_ACTION),
+                        if (editor.mEditListener != null) {
+                            editor.mEditListener.onStageProgress(
+                                    token,
+                                    params.getString(KEY_ACTION),
                                     params.getFloat(KEY_STAGE_PROGRESS));
                         }
                         break;
@@ -81,13 +83,16 @@ public class VideoEditorManager {
                         }
                         break;
                     case MSG_ON_STAGE_SUCCEED:
-                        if (editor.mEditStageListener != null) {
-                            editor.mEditStageListener.onSucceeded(params.getString(KEY_ACTION));
+                        if (editor.mEditListener != null) {
+                            editor.mEditListener.onStageSucceeded(
+                                    token,
+                                    params.getString(KEY_ACTION),
+                                    editor.getActionByName(params.getString(KEY_ACTION)).getOutputFile());
                         }
                         break;
                     case MSG_ON_SUCCEED:
                         if (editor.mEditListener != null) {
-                            editor.mEditListener.onSucceeded(token, editor.mOutputFile);
+                            editor.mEditListener.onSucceeded(token);
                         }
                         // clear all.
                         clear(token);
@@ -98,8 +103,8 @@ public class VideoEditorManager {
                             act.release();
                         }
 
-                        if (editor.mEditStageListener != null) {
-                            editor.mEditStageListener.onFailed(params.getString(KEY_ACTION));
+                        if (editor.mEditListener != null) {
+                            editor.mEditListener.onStageFailed(token, params.getString(KEY_ACTION));
                         }
                         break;
                     case MSG_ON_FAILED:
@@ -130,8 +135,8 @@ public class VideoEditorManager {
         return mContext;
     }
 
-    public synchronized Editor edit(File videoFile) {
-        return new Editor(videoFile);
+    public synchronized Editor edit() {
+        return new Editor();
     }
 
     public synchronized void cancel(long token) {
@@ -139,13 +144,6 @@ public class VideoEditorManager {
         if (editor != null) {
             editor.mIsCanceled = true;
         }
-    }
-
-    public File getBaseWorkFolder(long token) {
-        Editor editor = mCallMap.get(token);
-        return editor == null ?
-                null : editor.mOutputFile == null ?
-                null : editor.mOutputFile.getParentFile();
     }
 
     public void onStart(long token, AbstractAction action) {
@@ -214,9 +212,8 @@ public class VideoEditorManager {
             // try exec next action.
             if (editor.mActionIterator.hasNext()) {
                 // our output is the input of next action.
-                editor.mActionIterator.next().start(action.mOutputFile);
+                editor.mActionIterator.next().start();
             } else {
-                action.mOutputFile.renameTo(editor.mOutputFile);
                 // notify overall
                 Message overallMsg = Message.obtain();
                 Bundle overallParams = new Bundle();
@@ -265,18 +262,27 @@ public class VideoEditorManager {
     }
 
     public static class Editor {
-        private File mInputFile;
-        private File mOutputFile;
-        public List<AbstractAction> mActionList = new ArrayList<>();
-        public Iterator<AbstractAction> mActionIterator;
-        public long mToken;
-        public boolean mIsCanceled;
+        List<AbstractAction> mActionList = new ArrayList<>();
+        Iterator<AbstractAction> mActionIterator;
+        long mToken;
+        boolean mIsCanceled;
 
         EditListener mEditListener;
-        EditStageListener mEditStageListener;
 
-        private Editor(File input) {
-            this.mInputFile = input;
+        AbstractAction getActionByName(String name) {
+            if (TextUtils.isEmpty(name)) {
+                return null;
+            }
+            for (AbstractAction action : mActionList) {
+                if (name.equals(action.mActionName)) {
+                    return action;
+                }
+            }
+
+            return null;
+        }
+
+        private Editor() {
             mToken = sManager.getToken();
         }
 
@@ -289,42 +295,21 @@ public class VideoEditorManager {
             return this;
         }
 
-        public Editor saveAs(File outputFile) {
-            this.mOutputFile = outputFile;
-
-            return this;
-        }
-
-        public long commit(EditListener listener, EditStageListener stageListener) {
-            // check if input file is rational.
-            if (mInputFile == null ||
-                    !mInputFile.exists() ||
-                    !mInputFile.isFile()) {
-                Logger.e(TAG, "Input video is illegal, input video: " + mInputFile);
-                return Constants.INVALID_TOKEN;
-            }
-
-            if (mOutputFile == null) {
-                Logger.e(TAG, "Output should not be null!");
-                return Constants.INVALID_TOKEN;
-            }
+        public long commit(EditListener listener) {
             if (mActionList.size() == 0) {
                 Logger.e(TAG, "No edit action specified, please set at least one action!");
                 return Constants.INVALID_TOKEN;
             }
 
             mEditListener = listener;
-            mEditStageListener = stageListener;
             sManager.mCallMap.put(mToken, this);
 
             mActionIterator = mActionList.iterator();
 
-            Logger.d(TAG, "Start edit, input file: " + mInputFile
-                    + ", output file: " + mOutputFile
-                    + ", action list: " + mActionList);
+            Logger.d(TAG, "Start edit, action list: " + mActionList);
 
             // start from the first one.
-            mActionIterator.next().start(mInputFile);
+            mActionIterator.next().start();
 
             return mToken;
         }

@@ -14,8 +14,8 @@ import java.io.File;
 public abstract class AbstractAction {
     public final String mActionName;
 
-    public File mInputFile;
-    public File mOutputFile;
+    protected File mInputFile;
+    protected File mOutputFile;
 
     public long mToken;
 
@@ -26,10 +26,7 @@ public abstract class AbstractAction {
     /**
      * start this action.
      */
-    public void start(File inputFile) {
-        this.mInputFile = inputFile;
-        this.mOutputFile = genOutputFile();
-    }
+    public abstract void start();
 
     public void release() {
         if (mOutputFile != null && mOutputFile.exists()) {
@@ -53,11 +50,11 @@ public abstract class AbstractAction {
         VideoEditorManager.getManager().onFailed(mToken, this);
     }
 
-    protected final File getBaseWorkFolder() {
-        return VideoEditorManager.getManager().getBaseWorkFolder(mToken);
+    public File getInputFile() {
+        return mInputFile;
     }
 
-    private File genOutputFile() {
-        return new File(VideoEditorManager.getManager().getBaseWorkFolder(mToken), mActionName + ".tmp");
+    public File getOutputFile() {
+        return mOutputFile;
     }
 }

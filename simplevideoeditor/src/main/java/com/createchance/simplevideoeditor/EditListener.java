@@ -12,18 +12,26 @@ public class EditListener {
     private static final String TAG = EditListener.class.getSimpleName();
 
     public void onStart(long token) {
-//        Logger.d(TAG, "Editor: " + token + " started.");
+    }
+
+    public void onStageStart(long token, String stage) {
     }
 
     public void onProgress(long token, float progress) {
-//        Logger.d(TAG, "Editor: " + token + " is going, progress: " + progress);
     }
 
-    public void onSucceeded(long token, File outputFile) {
-//        Logger.d(TAG, "Editor: " + token + " succeeded.");
+    public void onStageProgress(long token, String stage, float progress) {
+    }
+
+    public void onSucceeded(long token) {
+    }
+
+    public void onStageSucceeded(long token, String stage, File outputFile) {
     }
 
     public void onFailed(long token) {
-//        Logger.d(TAG, "Editor: " + token + " failed.");
+    }
+
+    public void onStageFailed(long token, String stage) {
     }
 }

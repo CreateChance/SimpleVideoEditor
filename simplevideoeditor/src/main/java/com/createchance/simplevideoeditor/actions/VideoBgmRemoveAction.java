@@ -39,8 +39,7 @@ public class VideoBgmRemoveAction extends AbstractAction {
     }
 
     @Override
-    public void start(File inputFile) {
-        super.start(inputFile);
+    public void start() {
         onStarted();
         mRemoveWorker = new RemoveWorker();
         WorkRunner.addTaskToBackground(mRemoveWorker);
@@ -48,6 +47,12 @@ public class VideoBgmRemoveAction extends AbstractAction {
 
     public static class Builder {
         private VideoBgmRemoveAction bgmRemoveAction = new VideoBgmRemoveAction();
+
+        public Builder input(File input) {
+            bgmRemoveAction.mInputFile = input;
+
+            return this;
+        }
 
         public Builder from(long fromMs) {
             bgmRemoveAction.mRemoveStartPosMs = fromMs;
@@ -57,6 +62,12 @@ public class VideoBgmRemoveAction extends AbstractAction {
 
         public Builder duration(long durationMs) {
             bgmRemoveAction.mRemoveDurationMs = durationMs;
+
+            return this;
+        }
+
+        public Builder output(File output) {
+            bgmRemoveAction.mOutputFile = output;
 
             return this;
         }

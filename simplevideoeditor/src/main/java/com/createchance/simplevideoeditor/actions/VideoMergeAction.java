@@ -28,7 +28,6 @@ public class VideoMergeAction extends AbstractAction {
     private static final String TAG = "VideoMergeAction";
 
     private List<File> mMergeFiles;
-    private int mInputPos;
     private MergeWorker mMergeWorker;
 
     private VideoMergeAction() {
@@ -41,8 +40,7 @@ public class VideoMergeAction extends AbstractAction {
     }
 
     @Override
-    public void start(File inputFile) {
-        super.start(inputFile);
+    public void start() {
         onStarted();
         mMergeWorker = new MergeWorker();
 
@@ -52,14 +50,14 @@ public class VideoMergeAction extends AbstractAction {
     public static class Builder {
         private VideoMergeAction mergeAction = new VideoMergeAction();
 
-        public Builder merge(File video) {
+        public Builder input(File video) {
             mergeAction.mMergeFiles.add(video);
 
             return this;
         }
 
-        public Builder inputHere() {
-            mergeAction.mInputPos = mergeAction.mMergeFiles.size();
+        public Builder output(File output) {
+            mergeAction.mOutputFile = output;
 
             return this;
         }
@@ -84,8 +82,6 @@ public class VideoMergeAction extends AbstractAction {
             try {
                 if (checkRational()) {
                     prepare();
-                    // add input video file to merge list.
-                    mMergeFiles.add(mInputPos, mInputFile);
                     merge();
                     isFinished = true;
                 } else {

@@ -66,8 +66,7 @@ public class VideoBgmAddAction extends AbstractAction {
     }
 
     @Override
-    public void start(File inputFile) {
-        super.start(inputFile);
+    public void start() {
         onStarted();
         try {
             String bgmMime = getBgmMime();
@@ -99,7 +98,7 @@ public class VideoBgmAddAction extends AbstractAction {
                 .transcode(mBgmFile)
                 .from(mBgmStartPosMs)
                 .duration(mBgmDurationMs)
-                .saveAs(new File(getBaseWorkFolder(), "transcode.aac"))
+                .saveAs(new File(mOutputFile.getParent(), "transcode.aac"))
                 .build()
                 .start(new AudioTransCoder.Callback() {
                     @Override
@@ -172,6 +171,18 @@ public class VideoBgmAddAction extends AbstractAction {
 
         public Builder bgmDuration(long durationMs) {
             bgmAddAction.mBgmDurationMs = durationMs;
+
+            return this;
+        }
+
+        public Builder input(File input) {
+            bgmAddAction.mInputFile = input;
+
+            return this;
+        }
+
+        public Builder output(File output) {
+            bgmAddAction.mOutputFile = output;
 
             return this;
         }

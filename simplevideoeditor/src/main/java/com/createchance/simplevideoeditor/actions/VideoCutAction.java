@@ -41,8 +41,7 @@ public class VideoCutAction extends AbstractAction {
     }
 
     @Override
-    public void start(File inputFile) {
-        super.start(inputFile);
+    public void start() {
         onStarted();
 
         mCutWorker = new CutWorker();
@@ -52,6 +51,12 @@ public class VideoCutAction extends AbstractAction {
     public static class Builder {
         private VideoCutAction cutAction = new VideoCutAction();
 
+        public Builder input(File input) {
+            cutAction.mInputFile = input;
+
+            return this;
+        }
+
         public Builder from(long startMs) {
             cutAction.mCutStartPosMs = startMs;
 
@@ -60,6 +65,12 @@ public class VideoCutAction extends AbstractAction {
 
         public Builder duration(long durationMs) {
             cutAction.mCutDurationMs = durationMs;
+
+            return this;
+        }
+
+        public Builder output(File output) {
+            cutAction.mOutputFile = output;
 
             return this;
         }

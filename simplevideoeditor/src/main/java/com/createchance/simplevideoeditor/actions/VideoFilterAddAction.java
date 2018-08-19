@@ -40,10 +40,12 @@ public class VideoFilterAddAction extends AbstractAction {
         super(Constants.ACTION_ADD_FILTER);
     }
 
+    @Override
     public File getInputFile() {
         return mInputFile;
     }
 
+    @Override
     public File getOutputFile() {
         return mOutputFile;
     }
@@ -57,8 +59,7 @@ public class VideoFilterAddAction extends AbstractAction {
     }
 
     @Override
-    public void start(File inputFile) {
-        super.start(inputFile);
+    public void start() {
         onStarted();
 
         WatermarkAddWorker watermarkAddWorker = new WatermarkAddWorker();
@@ -71,34 +72,46 @@ public class VideoFilterAddAction extends AbstractAction {
     }
 
     public static class Builder {
-        private VideoFilterAddAction watermarkAddAction = new VideoFilterAddAction();
+        private VideoFilterAddAction videoFilterAddAction = new VideoFilterAddAction();
+
+        public Builder input(File input) {
+            videoFilterAddAction.mInputFile = input;
+
+            return this;
+        }
 
         public Builder watermarkFilter(WaterMarkFilter filter) {
-            watermarkAddAction.mWaterMarkFilter = filter;
+            videoFilterAddAction.mWaterMarkFilter = filter;
 
             return this;
         }
 
         public Builder frameFilter(VideoFrameLookupFilter filter) {
-            watermarkAddAction.mVideoFrameLookupFilter = filter;
+            videoFilterAddAction.mVideoFrameLookupFilter = filter;
 
             return this;
         }
 
         public Builder from(long fromMs) {
-            watermarkAddAction.mFromMs = fromMs;
+            videoFilterAddAction.mFromMs = fromMs;
 
             return this;
         }
 
         public Builder duration(long durationMs) {
-            watermarkAddAction.mDurationMs = durationMs;
+            videoFilterAddAction.mDurationMs = durationMs;
+
+            return this;
+        }
+
+        public Builder output(File output) {
+            videoFilterAddAction.mOutputFile = output;
 
             return this;
         }
 
         public VideoFilterAddAction build() {
-            return watermarkAddAction;
+            return videoFilterAddAction;
         }
     }
 
