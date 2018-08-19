@@ -1,37 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
     tools:context="com.createchance.demo.MainActivity">
 
     <Button
-        android:id="@+id/btn_start"
+        android:id="@+id/btn_add_bgm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="start"
-        android:text="start" />
+        android:text="add bgm" />
 
     <Button
+        android:id="@+id/btn_remove_bgm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/btn_start"
-        android:onClick="cancel"
-        android:text="cancel" />
+        android:text="remove bgm" />
 
-    <TextView
-        android:id="@+id/tv_progress"
+    <Button
+        android:id="@+id/btn_cut"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="0.00%" />
+        android:text="cut" />
 
-    <TextView
-        android:id="@+id/tv_action"
+    <Button
+        android:id="@+id/btn_add_filter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/tv_progress"
-        android:layout_centerHorizontal="true"
-        android:text="null" />
+        android:text="add filter and watermark" />
 
-</RelativeLayout>
+    <Button
+        android:id="@+id/btn_merge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="merge" />
+
+</LinearLayout>

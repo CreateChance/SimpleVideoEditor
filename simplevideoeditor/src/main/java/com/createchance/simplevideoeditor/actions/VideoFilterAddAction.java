@@ -31,8 +31,6 @@ public class VideoFilterAddAction extends AbstractAction {
 
     private static final String TAG = "VideoFilterAddAction";
 
-    private long mFromMs;
-    private long mDurationMs;
     private WaterMarkFilter mWaterMarkFilter;
     private VideoFrameLookupFilter mVideoFrameLookupFilter;
 
@@ -48,14 +46,6 @@ public class VideoFilterAddAction extends AbstractAction {
     @Override
     public File getOutputFile() {
         return mOutputFile;
-    }
-
-    public long getFromMs() {
-        return mFromMs;
-    }
-
-    public long getDurationMs() {
-        return mDurationMs;
     }
 
     @Override
@@ -88,18 +78,6 @@ public class VideoFilterAddAction extends AbstractAction {
 
         public Builder frameFilter(VideoFrameLookupFilter filter) {
             videoFilterAddAction.mVideoFrameLookupFilter = filter;
-
-            return this;
-        }
-
-        public Builder from(long fromMs) {
-            videoFilterAddAction.mFromMs = fromMs;
-
-            return this;
-        }
-
-        public Builder duration(long durationMs) {
-            videoFilterAddAction.mDurationMs = durationMs;
 
             return this;
         }
@@ -157,19 +135,7 @@ public class VideoFilterAddAction extends AbstractAction {
             if (mInputFile != null &&
                     mInputFile.exists() &&
                     mInputFile.isFile() &&
-                    mOutputFile != null &&
-                    mFromMs >= 0 &&
-                    mDurationMs >= 0) {
-                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-                mediaMetadataRetriever.setDataSource(mInputFile.getAbsolutePath());
-                long duration = Long.valueOf(mediaMetadataRetriever.
-                        extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-                mediaMetadataRetriever.release();
-                if (mFromMs + mDurationMs > duration) {
-                    Logger.e(TAG, "Video selected section of out of duration!");
-                    return false;
-                }
-
+                    mOutputFile != null) {
                 if (mOutputFile.exists()) {
                     Logger.w(TAG, "WARNING: Output file: " + mOutputFile
                             + " already exists, we will override it!");

@@ -51,6 +51,7 @@ public class VideoEditorManager {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
+                Logger.v(TAG, "New msg: " + msg.what);
                 Bundle params = msg.getData();
                 long token = params.getLong(KEY_TOKEN);
                 Editor editor = mCallMap.get(token);
