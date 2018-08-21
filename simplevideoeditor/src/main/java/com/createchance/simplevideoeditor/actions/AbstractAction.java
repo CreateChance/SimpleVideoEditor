@@ -30,7 +30,7 @@ public abstract class AbstractAction {
 
     public void release() {
         if (mOutputFile != null && mOutputFile.exists()) {
-            mOutputFile.delete();
+//            mOutputFile.delete();
         }
     }
 
