@@ -1,0 +1,8 @@
+int attr debug 0x7f040001
+int attr video_loop 0x7f040002
+int attr video_source 0x7f040003
+int string app_name 0x7f150001
+int[] styleable SimpleVideoPlayer { 0x7f040001, 0x7f040002, 0x7f040003 }
+int styleable SimpleVideoPlayer_debug 0
+int styleable SimpleVideoPlayer_video_loop 1
+int styleable SimpleVideoPlayer_video_source 2

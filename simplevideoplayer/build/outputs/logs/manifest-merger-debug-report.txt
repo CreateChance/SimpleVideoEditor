@@ -1,0 +1,43 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:1-11:12
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:1-11:12
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:1-11:12
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:1-11:12
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:1-11:12
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:1-11:12
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:1-11:12
+	package
+		ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:3:5-64
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+	android:versionName
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+		ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:1-11:12
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+	android:versionCode
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+		ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:1-11:12
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:1:11-69
+application
+ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:5:5-9:19
+	android:supportsRtl
+		ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:7:9-35
+	android:label
+		ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml:6:9-41
+uses-sdk
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+		ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+		ADDED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml
+		INJECTED from /Users/gaochao/WorkSpace/SourceCode/github/SimpleVideoEditor/simplevideoplayer/src/main/AndroidManifest.xml

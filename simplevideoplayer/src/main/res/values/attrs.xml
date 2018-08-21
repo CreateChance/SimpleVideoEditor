@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="SimpleVideoPlayer">
+
+        <attr name="video_source" format="string"/>
+
+        <attr name="debug" format="boolean"/>
+
+        <attr name="video_loop" format="boolean"/>
+
+    </declare-styleable>
+
+</resources>

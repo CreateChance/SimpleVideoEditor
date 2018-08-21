@@ -1,0 +1,16 @@
+<resources>
+    <string name="video_edit_ui_title">Video Edit</string>
+
+    <string name="btn_bgm_add">add bgm</string>
+    <string name="btn_bgm_remove">remove bgm</string>
+    <string name="btn_cut">cut video</string>
+    <string name="btn_filter_add">add filter and watermark</string>
+    <string name="btn_merge">merge videos</string>
+
+    <string name="panel_bgm_bgm_start">Bgm start</string>
+    <string name="panel_bgm_bgm_duration">Bgm duration</string>
+    <string name="panel_video_start">Video start</string>
+    <string name="panel_video_duration">Video duration</string>
+    <string name="panel_choose_bgm">Choose Bgm</string>
+    <string name="panel_choose_watermark">Choose watermark</string>
+</resources>

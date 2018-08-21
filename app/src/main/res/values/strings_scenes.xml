@@ -1,0 +1,11 @@
+<resources>
+    <string name="scenes_ui_template_title">模版镜头</string>
+    <string name="scenes_ui_custom_title">自定义镜头</string>
+    <string name="scenes_ui_next_step">下一步</string>
+
+    <string name="scene_delete_scene_dialog_content">删除此镜头，确定吗？</string>
+    <string name="scene_delete_video_dialog_content">删除视频，确定吗？</string>
+    <string name="scene_delete_all_video_dialog_content">放弃全部视频，确定吗？</string>
+    <string name="scene_delete_dialog_confirm">确定</string>
+    <string name="scene_delete_dialog_cancel">取消</string>
+</resources>
