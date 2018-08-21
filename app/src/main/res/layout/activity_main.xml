@@ -1,40 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
-    tools:context="com.createchance.demo.MainActivity">
+    tools:context="com.createchance.demo.views.MainActivity">
 
-    <Button
-        android:id="@+id/btn_add_bgm"
+    <RelativeLayout
+        android:id="@+id/vw_title"
+        android:layout_width="match_parent"
+        android:layout_height="84dp"
+        android:background="#62DDD3">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="15dp"
+            android:text="@string/main_ui_title"
+            android:textColor="#ffffff"
+            android:textSize="26sp" />
+
+        <ImageView
+            android:id="@+id/iv_take_one_work"
+            android:layout_width="45dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="20dp"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+            android:src="@drawable/take_one_work" />
+
+    </RelativeLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rcv_works_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/vw_title"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_no_works_tip"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="add bgm" />
+        android:layout_centerInParent="true"
+        android:text="@string/no_works_tip"
+        android:visibility="gone" />
 
-    <Button
-        android:id="@+id/btn_remove_bgm"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="remove bgm" />
-
-    <Button
-        android:id="@+id/btn_cut"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="cut" />
-
-    <Button
-        android:id="@+id/btn_add_filter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="add filter and watermark" />
-
-    <Button
-        android:id="@+id/btn_merge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="merge" />
-
-</LinearLayout>
+</RelativeLayout>

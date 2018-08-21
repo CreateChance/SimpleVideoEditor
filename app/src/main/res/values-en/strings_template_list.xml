@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="template_list_ui_title">Template List</string>
+    <string name="apply_this_template">Apply</string>
+    <string name="custom_scene">Custom</string>
+</resources>

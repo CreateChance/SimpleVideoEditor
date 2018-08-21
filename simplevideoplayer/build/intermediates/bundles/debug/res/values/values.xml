@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SimpleVideoPlayer"><attr format="string" name="video_source"/><attr format="boolean" name="debug"/><attr format="boolean" name="video_loop"/></declare-styleable>
+    <string name="app_name">lib_video_player</string>
+</resources>

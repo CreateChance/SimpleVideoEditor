@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.createchance.demo.views.VideoEditActivity">
+
+    <com.createchance.SimpleVideoPlayer
+        android:id="@+id/vw_video_player"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <RelativeLayout
+        android:id="@+id/vw_title"
+        android:layout_width="match_parent"
+        android:layout_height="84dp"
+        android:background="#A062DDD3">
+
+        <ImageView
+            android:id="@+id/iv_back"
+            android:layout_width="45dp"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:paddingEnd="5dp"
+            android:paddingStart="15dp"
+            android:src="@drawable/arrow_left" />
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="15dp"
+            android:layout_toEndOf="@id/iv_back"
+            android:text="@string/video_edit_ui_title"
+            android:textColor="#ffffff"
+            android:textSize="26sp" />
+
+        <ImageView
+            android:id="@+id/iv_edit"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="20dp"
+            android:src="@drawable/setting" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_scene_script"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:background="#A062DDD3"
+            android:gravity="center"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            tools:text="This is script of scene." />
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/vw_edit_panel"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</RelativeLayout>

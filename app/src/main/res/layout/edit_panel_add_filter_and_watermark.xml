@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#ffffff">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="@string/btn_filter_add" />
+
+    <Switch
+        android:id="@+id/sw_add_filter_enabled"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_title" />
+
+    <Button
+        android:id="@+id/btn_choose_watermark"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/sw_add_filter_enabled"
+        android:background="@drawable/common_btn_bg"
+        android:text="@string/panel_choose_watermark"
+        android:textColor="#ffffff" />
+
+    <TextView
+        android:id="@+id/tv_watermark_file"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btn_choose_watermark"
+        tools:text="/sdcard/watermark.png" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_watermark_file">
+
+        <RadioGroup
+            android:id="@+id/rg_filters"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/rb_filter_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter1" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter2" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter3" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter4" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter5" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter6" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter7" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_8"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter8" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_9"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter9" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_10"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter10" />
+
+            <RadioButton
+                android:id="@+id/rb_filter_11"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="filter11" />
+
+        </RadioGroup>
+
+    </ScrollView>
+
+</RelativeLayout>

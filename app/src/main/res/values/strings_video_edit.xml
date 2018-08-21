@@ -1,0 +1,17 @@
+<resources>
+    <string name="video_edit_ui_title">视频编辑</string>
+
+    <string name="btn_bgm_add">添加背景音</string>
+    <string name="btn_bgm_remove">移除背景音</string>
+    <string name="btn_cut">视频剪切</string>
+    <string name="btn_filter_add">添加滤镜和水印</string>
+    <string name="btn_merge">合并视频</string>
+
+    <string name="panel_bgm_bgm_start">背景开始</string>
+    <string name="panel_bgm_bgm_duration">背景长度</string>
+    <string name="panel_video_start">视频开始</string>
+    <string name="panel_video_duration">视频长度</string>
+    <string name="panel_choose_bgm">选取背景音</string>
+    <string name="panel_choose_watermark">选取水印图片</string>
+
+</resources>

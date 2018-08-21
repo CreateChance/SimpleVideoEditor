@@ -1,0 +1,11 @@
+<resources>
+    <string name="scenes_ui_template_title">Template Scene</string>
+    <string name="scenes_ui_custom_title">Custom Scene</string>
+    <string name="scenes_ui_next_step">Next</string>
+
+    <string name="scene_delete_scene_dialog_content">Delete this scene, are you sure?</string>
+    <string name="scene_delete_video_dialog_content">Delete this video, are you sure?</string>
+    <string name="scene_delete_all_video_dialog_content">Delete all video, are you sure?</string>
+    <string name="scene_delete_dialog_confirm">Yes</string>
+    <string name="scene_delete_dialog_cancel">Cancel</string>
+</resources>

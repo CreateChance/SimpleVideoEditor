@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="template_list_ui_title">模版列表</string>
+    <string name="apply_this_template">应用</string>
+    <string name="custom_scene">自定义</string>
+</resources>

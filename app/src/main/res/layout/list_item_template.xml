@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingEnd="17dp"
+    android:paddingStart="17dp">
+
+    <RelativeLayout
+        android:id="@+id/vw_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_template_scripts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:lineSpacingExtra="10dp"
+            android:textColor="#444444"
+            android:textSize="20sp"
+            tools:text="想你深情的眼\n是如何越过沧桑的墙\n穿透我\n红尘过往\n望断夜雨西窗。" />
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true" />
+
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/btn_apply"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_below="@id/vw_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/common_btn_bg"
+        android:text="@string/apply_this_template"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/btn_apply"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="20dp"
+        android:background="#E2E2E2" />
+
+</RelativeLayout>

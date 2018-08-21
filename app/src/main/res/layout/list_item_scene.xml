@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="3.5dp"
+    android:layout_marginStart="3.5dp"
+    android:layout_marginTop="20dp">
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/cv_scene"
+        android:layout_width="90dp"
+        android:layout_height="160dp"
+        app:cardCornerRadius="5dp"
+        app:cardElevation="0dp">
+
+        <RelativeLayout
+            android:id="@+id/rlt_scene"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFF6F6F6">
+
+            <ImageView
+                android:id="@+id/iv_scene_thumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <ImageView
+                android:id="@+id/iv_scene_plus"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_centerInParent="true"
+                android:padding="20dp"
+                android:src="@drawable/scene_plus" />
+
+            <ImageView
+                android:id="@+id/iv_scene_delete"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="15dp"
+                android:src="@drawable/scene_delete"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/tv_scene_seq"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="35dp"
+                android:layout_marginTop="5dp"
+                android:textColor="#999999"
+                android:textSize="25sp"
+                tools:text="01" />
+
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <TextView
+        android:id="@+id/tv_scene_script"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_alignStart="@id/cv_scene"
+        android:layout_below="@id/cv_scene"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="6dp" />
+
+</RelativeLayout>
