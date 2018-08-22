@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RoundProgressbar">
+        <attr name="reachedColor" format="color" />
+        <attr name="unreachedColor" format="color" />
+        <attr name="centerColor" format="color" />
+        <attr name="textSize" format="dimension" />
+        <attr name="textColor" format="color" />
+        <attr name="ballSize" format="dimension" />
+        <attr name="ballColor" format="color" />
+        <attr name="strokeWidth" />
+        <attr name="centerText" format="string" />
+    </declare-styleable>
+</resources>

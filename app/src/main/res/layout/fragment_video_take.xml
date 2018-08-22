@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:apps="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.createchance.simplecameraview.CameraView
+        android:id="@+id/vw_camera_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageView
+        android:id="@+id/iv_switch_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="30dp"
+        android:layout_marginTop="30dp"
+        android:src="@drawable/switch_camera" />
+
+    <com.createchance.demo.views.RoundProgressbar
+        android:id="@+id/vw_start_taking"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="60dp"
+        android:max="100"
+        android:progress="25"
+        apps:ballColor="#61DDD4"
+        apps:ballSize="2.5dp"
+        apps:centerColor="#00fefefe"
+        apps:centerText="10s"
+        apps:reachedColor="#ffffff"
+        apps:strokeWidth="0.5dp"
+        apps:textColor="#61DDD4"
+        apps:textSize="10sp"
+        apps:unreachedColor="#ff84E0D9" />
+
+</RelativeLayout>

@@ -5,11 +5,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.support.v4.content.FileProvider;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -19,8 +16,6 @@ import com.createchance.demo.R;
 import com.createchance.demo.model.Scene;
 import com.createchance.demo.model.SimpleModelManager;
 import com.createchance.demo.model.Template;
-
-import java.io.File;
 
 public class ScenesActivity extends Activity implements View.OnClickListener,
         SceneListAdapter.VideoHandler {
@@ -126,32 +121,12 @@ public class ScenesActivity extends Activity implements View.OnClickListener,
     @Override
     public void takeVideo(int sceneIndex) {
         mCurrentSceneIndex = sceneIndex;
-        Scene scene = SimpleModelManager.getInstance().getSceneList().get(sceneIndex);
-        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-
-        scene.video = new File(getFilesDir(), System.currentTimeMillis() + ".mp4");
-        Uri videoUri;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            //申请权限
-            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            //getUriForFile的第二个参数就是Manifest中的authorities
-            videoUri = FileProvider.getUriForFile(
-                    this,
-                    "com.createchance.demo.fileProvider",
-                    scene.video);
-        } else {
-            videoUri = Uri.fromFile(scene.video);
-        }
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, videoUri);
-        //设置保存视频文件的质量
-        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
-        startActivityForResult(intent, CODE_TAKE_VIDEO_REQUEST);
+        VideoTakeAndCheckActivity.start(this, mCurrentSceneIndex, CODE_TAKE_VIDEO_REQUEST);
     }
 
     @Override
     public void editVideo(int sceneIndex) {
         mCurrentSceneIndex = sceneIndex;
-        Scene scene = SimpleModelManager.getInstance().getSceneList().get(sceneIndex);
         VideoEditActivity.start(this, sceneIndex);
     }
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CameraView">
+        <!-- 将这个属性设置为true，表示需要保持相机的纵横比 -->
+        <attr name="android:adjustViewBounds"/>
+
+        <!-- 设置摄像头，如果不设置默认是后置摄像头 -->
+        <attr name="camera" format="enum">
+            <enum name="front" value="0"/>
+            <enum name="back" value="1"/>
+        </attr>
+
+        <!-- 设置相机纵横比 -->
+        <attr name="aspectRatio" format="string"/>
+
+        <!-- 设置是否自动聚焦 -->
+        <attr name="autoFocus" format="boolean"/>
+
+        <!-- 设置默认闪光灯开关 -->
+        <attr name="flashlight" format="boolean"/>
+    </declare-styleable>
+</resources>

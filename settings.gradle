@@ -1,2 +1,3 @@
 include ':app', ':simplevideoeditor'
 include ':simplevideoplayer'
+include ':simplecameraview'

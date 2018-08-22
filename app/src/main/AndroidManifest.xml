@@ -34,7 +34,11 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name=".views.VideoEditActivity"></activity>
+        <activity android:name=".views.VideoEditActivity" />
+        <activity
+            android:name=".views.VideoTakeAndCheckActivity"
+            android:excludeFromRecents="true"
+            android:noHistory="true" />
     </application>
 
 </manifest>

@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/SimpleVideoEditor.iml" filepath="$PROJECT_DIR$/SimpleVideoEditor.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/simplecameraview/simplecameraview.iml" filepath="$PROJECT_DIR$/simplecameraview/simplecameraview.iml" />
       <module fileurl="file://$PROJECT_DIR$/simplevideoeditor/simplevideoeditor.iml" filepath="$PROJECT_DIR$/simplevideoeditor/simplevideoeditor.iml" />
       <module fileurl="file://$PROJECT_DIR$/simplevideoplayer/simplevideoplayer.iml" filepath="$PROJECT_DIR$/simplevideoplayer/simplevideoplayer.iml" />
     </modules>

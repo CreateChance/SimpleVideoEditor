@@ -26,3 +26,9 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+gradle.ext.compileSdkVersion = 26
+gradle.ext.targetSdkVersion = 26
+gradle.ext.buildToolsVersion = '26.0.2'
+gradle.ext.supportVersion = '26.0.2'
+gradle.ext.minSdkVersion = 18
